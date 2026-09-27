@@ -145,7 +145,7 @@ class ReleaseScriptTest(unittest.TestCase):
         changelog = (
             "# Changelog\n\n## Unreleased\n\n* New change.\n\n## 1.1.0 (2024-01-01)\n"
         )
-        with self.release_repo(changelog) as (root, git, env):
+        with self.release_repo(changelog) as (root, _git, env):
             before = {
                 name: (root / name).read_bytes()
                 for name in (

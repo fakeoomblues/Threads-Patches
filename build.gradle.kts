@@ -1,7 +1,7 @@
 import javax.xml.parsers.DocumentBuilderFactory
 
 plugins {
-    id("com.diffplug.spotless") version "8.10.2"
+    id("com.diffplug.spotless") version "8.10.3"
 }
 
 repositories {
@@ -19,7 +19,7 @@ spotless {
     }
     java {
         target("extensions/*/src/**/*.java")
-        googleJavaFormat("1.28.0")
+        googleJavaFormat("1.36.1")
     }
 }
 

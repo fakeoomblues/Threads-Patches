@@ -3,17 +3,22 @@
 Provision once per host, not on every build. Run `fish` blocks in fish and `bash`
 blocks in bash. For routine work, use [development verification](development.md#verify).
 
-## 1. Python and host tools
+## 1. Host tools
 
-Fedora WSL includes `python3`. Install host tools and isolated Python applications:
+Fedora WSL includes Python and the shell tools. Install the additional commands
+used by repo development/release workflows:
 
 ```fish
-sudo dnf install -y uv curl fish git unzip zip ripgrep binutils bash jq gh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fish_add_path /home/linuxbrew/.linuxbrew/bin
+sudo dnf install -y uv git gh jq
+```
+
+Install Homebrew by following [brew.sh](https://brew.sh), then install Java and
+APK analysis/Android SDK tools:
+
+```fish
 brew install openjdk@21 jadx apktool android-cli
-fish_add_path ~/.local/bin ~/Android/Sdk/build-tools/36.1.0 ~/Android/Sdk/platform-tools ~/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/linux-x86_64/bin
+brew unlink openjdk
+brew link openjdk@21
 ```
 
 ## 2. Java, Android CLI, and analysis tools
@@ -27,22 +32,34 @@ set -gx ANDROID_HOME "$HOME/Android/Sdk"
 
 ### SDK packages: build requirements versus analysis utilities
 
-`android-cli` installs the SDK manager, not its packages. Inspect before installing:
+`android-cli` installs the SDK manager. Gradle downloads the Android 36 platform
+required by Morphe's `compileSdk` and the AGP-compatible Build-Tools as needed, so
+neither needs a manual install command. The SDK manager can install platform-tools
+and NDK for local device/native analysis. It treats NDK releases as side-by-side
+packages whose IDs include the release number, so
+`android sdk install ndk` is not a valid package name. List stable candidates
+with `android sdk list --all 'ndk/*'`, then install the desired exact ID. Build
+Tools IDs also include a version; don't install one manually here because AGP
+selects and downloads its compatible Build-Tools version.
 
 ```fish
 android info
 android sdk list
-android sdk install platforms/android-36
 android sdk install platform-tools
+# Optional: select a stable package ID from `android sdk list --all 'ndk/*'`:
 android sdk install "ndk;29.0.14206865"
-# Analysis/signature tools, not a repository build-tools pin:
-android sdk install build-tools/36.1.0
+android sdk list
+fish_add_path /home/linuxbrew/.linuxbrew/bin ~/.local/bin
+fish_add_path ~/Android/Sdk/platform-tools ~/Android/Sdk/build-tools/36.0.0
+# Optional: add the NDK compiler tools only when doing native-code analysis:
+fish_add_path ~/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/linux-x86_64/bin
 ```
 
-Morphe sets `compileSdk = 36`; AGP chooses build-tools (the repo does not pin
-`buildToolsVersion`). [Gradle can download missing build packages](https://developer.android.com/studio/intro/update#download-with-gradle)
-with an existing SDK, accepted licenses, and network access, but this does not
-ensure build-tools 36.1.0 or `adb` is installed.
+Morphe sets `compileSdk = 36`; AGP chooses and installs its compatible build-tools
+(the repo does not pin `buildToolsVersion`). [Gradle can download missing build
+packages](https://developer.android.com/studio/intro/update#download-with-gradle)
+with an existing SDK, accepted licenses, and network access. Add the resulting
+AGP-selected `build-tools` directory to PATH for `aapt` and `apksigner`.
 
 `platform-tools` supplies `adb`; build-tools supplies `aapt`, `aapt2`, `apksigner`,
 and `zipalign`. An already-installed suitable build-tools version is fine; adjust
@@ -94,23 +111,33 @@ release tooling uses `gh`, `python3`, and `jq`.
 
 ## 5. Morphe CLI and GUI share one JAR
 
-The current official stable release is Morphe Desktop **1.17.0**. Download that
-versioned JAR and verify the published GitHub asset digest before using it:
+Morphe Desktop is distributed upstream as a JAR; this repo does not configure a
+package-manager package for it. Fetch the latest stable release without hard-coding
+a version, and verify it against the SHA-256 digest published in GitHub release
+metadata before using it:
 
-```fish
-mkdir -p ~/.local/share/morphe
-gh release download v1.17.0 --repo MorpheApp/morphe-desktop \
-  --pattern 'morphe-desktop-1.17.0-all.jar' --dir ~/.local/share/morphe
-printf '%s  %s\n' \
-  '8cf6a9eab4ee9dab146bddc24681897851564f53116baec11f36ba2fa2f589be' \
-  "$HOME/.local/share/morphe/morphe-desktop-1.17.0-all.jar" | sha256sum -c -
+```bash
+set -euo pipefail
+repo=MorpheApp/morphe-desktop
+release=$(gh release view --repo "$repo" --json tagName,assets)
+tag=$(jq -r '.tagName' <<< "$release")
+version=${tag#v}
+asset="morphe-desktop-${version}-all.jar"
+digest=$(jq -r --arg asset "$asset" \
+  '.assets[] | select(.name == $asset) | .digest | sub("^sha256:"; "")' \
+  <<< "$release")
+[[ "$digest" =~ ^[[:xdigit:]]{64}$ ]] || { echo "Missing published SHA-256 for $asset" >&2; exit 1; }
+mkdir -p "$HOME/.local/share/morphe"
+gh release download "$tag" --repo "$repo" --pattern "$asset" --dir "$HOME/.local/share/morphe"
+printf '%s  %s\n' "$digest" "$HOME/.local/share/morphe/$asset" | sha256sum -c -
 ```
 
-This release was checked locally against the pinned Zalo APKM. It still fails
-Morphe's internal DEX hierarchy verification on missing Google IMA classes, in
-both `FULL` and `STRIP_FAST` bytecode modes; upgrading alone does not unblock that
-APK. Do not treat SDK verification as passed or install an output that failed
-patching.
+Morphe Desktop 1.17.0 was checked locally against the pinned Zalo APKM. It still
+fails Morphe's internal DEX hierarchy verification on missing Google IMA classes,
+in both `FULL` and `STRIP_FAST` bytecode modes; upgrading alone does not unblock
+that APK. The latest-release download above may select a newer version, which
+must be revalidated against the target APK. Do not treat SDK verification as
+passed or install an output that failed patching.
 
 `morphe-desktop-*-all.jar` starts the GUI without a subcommand, the CLI with one.
 Do not replace a JAR during an active patch run. `scripts/repatch.py` discovers the
@@ -136,29 +163,7 @@ split `.apkm` directly to Morphe or `scripts/repatch.py`, never an extracted
 `base.apk`. Record the source page URL, version name, versionCode, ABI/variant,
 and input SHA-256.
 
-## Effective repository toolchain
-
-| Layer | Effective value | Source / qualification |
-| --- | --- | --- |
-| Gradle wrapper | 9.7.1 | `gradle/wrapper/gradle-wrapper.properties` |
-| Morphe patches plugin | 1.3.4 | `settings.gradle.kts` |
-| Android Gradle Plugin | 9.1.0 | Resolved transitively from Morphe plugin |
-| Morphe patcher libraries | 1.12.0 | `gradle/libs.versions.toml` |
-| Kotlin compiler/runtime | 2.4.10 | Test catalog and resolved model |
-| Compile SDK | Android 36 | Morphe plugin default |
-| Java | 21 | Repository requirement (CI uses Temurin) |
-| D8/R8 | No standalone R8 artifact resolved | Shrinker behavior remains unqualified |
-
-Record effective values for releases/toolchain changes; do not infer AGP or R8
-from the wrapper:
-
-```bash
-./gradlew --version
-./gradlew buildEnvironment --no-daemon
-./gradlew :extensions:threads:dependencies --configuration debugRuntimeClasspath --no-daemon
-./gradlew :extensions:zalo:dependencies --configuration debugRuntimeClasspath --no-daemon
-java -version
-```
+## Build-tool behavior
 
 Extensions package compiled DEX through Morphe's `extension` plugin without a
 standalone R8 configuration. Do not claim shrinker safety until the resolved build

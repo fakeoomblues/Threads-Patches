@@ -4,14 +4,14 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
 import urllib.request
-from urllib.error import HTTPError, URLError
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin, urlparse
-import re
 
 ROOT = Path(__file__).resolve().parents[1]
 MAX_REDIRECTS = 5

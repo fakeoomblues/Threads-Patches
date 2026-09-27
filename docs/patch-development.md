@@ -343,7 +343,7 @@ For confirming a target runs before freezing the fingerprint, see
 
 ## Key imports
 
-Actual imports used by this repo's patches (morphe-patcher 1.12.0):
+Actual imports used by this repo's patches (morphe-patcher 1.14.1):
 
 ```kotlin
 // DSL + targets (see shared/Constants.kt and HideAdsPatch.kt):

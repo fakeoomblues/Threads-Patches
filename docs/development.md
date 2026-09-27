@@ -74,10 +74,12 @@ build output, and local APK analysis are not formatting targets.
 
 `qualityCheck` aggregates Spotless, detekt, and Android Lint. Reports live in
 `patches/build/reports/detekt/` and `extensions/*/build/reports/`.
-Tool versions are pinned in Gradle, hook revisions, and CI. Detekt **2.0.0-alpha.6**
-is intentional: its compiler matches Morphe's Kotlin **2.4.10**, unlike 1.23.8.
-Check [compatibility](https://detekt.dev/docs/introduction/compatibility/) when
-upgrading. Use documented rule exceptions, not a baseline of ignored findings.
+Gradle dependencies and CI action revisions are pinned for reproducible builds;
+CI's uv installation intentionally tracks the latest stable release. Detekt **2.0.0-alpha.6**
+remains intentional: its compiler matches Morphe's Kotlin **2.4.10**; stable Detekt
+1.23.8 targets Kotlin 2.0.21 and is not a compatible drop-in. Recheck the
+[compatibility table](https://detekt.dev/docs/introduction/compatibility/) before
+changing either. Use documented rule exceptions, not a baseline of ignored findings.
 
 ### Optional commit hooks
 
