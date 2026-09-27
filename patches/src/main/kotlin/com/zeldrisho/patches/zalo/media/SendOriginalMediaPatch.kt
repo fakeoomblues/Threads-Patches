@@ -15,24 +15,27 @@ private const val SMALI_HEX_RADIX = 16
 private fun fieldName(instruction: Instruction): String? = ((instruction as? ReferenceInstruction)?.reference as? FieldReference)?.name
 
 /** Returns the sole list index referencing [name]; fails if there are zero or multiple matches. */
-internal fun singleFieldInstructionIndex(instructions: List<Instruction>, name: String): Int = instructions.indices.single { fieldName(instructions[it]) == name }
+internal typealias IndexedInstruction = Pair<Int, Instruction>
 
-/** Returns the first list index referencing [name]; fails if no field matches. */
-internal fun firstFieldInstructionIndex(instructions: List<Instruction>, name: String): Int = instructions.indices.first { fieldName(instructions[it]) == name }
+/** Returns the sole method index referencing [name]; fails if matches are not unique. */
+internal fun singleFieldInstructionIndex(instructions: List<IndexedInstruction>, name: String): Int = instructions.filter { fieldName(it.second) == name }.single().first
 
-/** Returns the lowest list index referencing [name], or fails with [missingMessage]. */
+/** Returns the first method index referencing [name]; fails if no field matches. */
+internal fun firstFieldInstructionIndex(instructions: List<IndexedInstruction>, name: String): Int = instructions.first { fieldName(it.second) == name }.first
+
+/** Returns the lowest method index referencing [name], or fails with [missingMessage]. */
 internal fun earliestFieldInstructionIndex(
-    instructions: List<Instruction>,
+    instructions: List<IndexedInstruction>,
     name: String,
     missingMessage: String,
-): Int = instructions.indices.filter { fieldName(instructions[it]) == name }.minOrNull()
+): Int = instructions.filter { fieldName(it.second) == name }.minByOrNull { it.first }?.first
     ?: error(missingMessage)
 
-/** Returns the first MediaItem.q reference index, or fails if the original-quality flag moved. */
-internal fun earliestMediaItemFlagIndex(instructions: List<Instruction>): Int = instructions.indices.filter { index ->
-    val reference = (instructions[index] as? ReferenceInstruction)?.reference as? FieldReference
+/** Returns the first MediaItem.q method index, or fails if the original-quality flag moved. */
+internal fun earliestMediaItemFlagIndex(instructions: List<IndexedInstruction>): Int = instructions.filter { (_, instruction) ->
+    val reference = (instruction as? ReferenceInstruction)?.reference as? FieldReference
     reference?.definingClass == "Lcom/zing/zalo/data/mediapicker/model/MediaItem;" && reference.name == "q"
-}.minOrNull() ?: error("MediaItem original flag read moved; re-hunt Lbq0/g->a()")
+}.minByOrNull { it.first }?.first ?: error("MediaItem original flag read moved; re-hunt Lbq0/g->a()")
 
 /** Replaces the instruction at [index] with the supplied smali [replacement]. */
 internal fun replaceFieldInstruction(method: MutableMethod, index: Int, replacement: String) {
@@ -46,7 +49,7 @@ internal fun replaceFieldInstruction(method: MutableMethod, index: Int, replacem
  */
 internal fun replaceEarliestFieldInstruction(
     method: MutableMethod,
-    instructions: List<Instruction>,
+    instructions: List<IndexedInstruction>,
     name: String,
     replacement: String,
     missingMessage: String,
@@ -59,7 +62,7 @@ internal fun replaceEarliestFieldInstruction(
  *
  * The supplied [instructions] must have indexes aligned with [method].
  */
-internal fun replaceEarliestMediaItemFlag(method: MutableMethod, instructions: List<Instruction>) {
+internal fun replaceEarliestMediaItemFlag(method: MutableMethod, instructions: List<IndexedInstruction>) {
     replaceFieldInstruction(
         method,
         earliestMediaItemFlagIndex(instructions),
@@ -99,7 +102,7 @@ val sendZaloOriginalMediaPatch = bytecodePatch(
         // quality control is enabled. Change only that initialization; the
         // non-HD branch remains Standard.
         val defaultQualityIndex = singleFieldInstructionIndex(
-            PickerQualityInitialization.instructionMatches.map { it.instruction },
+            PickerQualityInitialization.instructionMatches.map { it.index to it.instruction },
             "HD",
         )
         PickerQualityInitialization.method.replaceInstruction(
@@ -119,7 +122,7 @@ val sendZaloOriginalMediaPatch = bytecodePatch(
         // Override only that cached photo-quality value; visibility and video
         // handling remain unchanged.
         val landingPageQualityIndex = singleFieldInstructionIndex(
-            LandingPageQualityChipUpdate.instructionMatches.map { it.instruction },
+            LandingPageQualityChipUpdate.instructionMatches.map { it.index to it.instruction },
             "Z1",
         )
         LandingPageQualityChipUpdate.method.replaceInstruction(
@@ -132,7 +135,7 @@ val sendZaloOriginalMediaPatch = bytecodePatch(
         // HD-checkbox initialization untouched.
         replaceEarliestFieldInstruction(
             LandingPageQualityChipInitialization.method,
-            LandingPageQualityChipInitialization.instructionMatches.map { it.instruction },
+            LandingPageQualityChipInitialization.instructionMatches.map { it.index to it.instruction },
             "Z1",
             "const/4 p3, 0x2",
             "LandingPageView quality-chip initialization moved; re-hunt W4()",
@@ -141,7 +144,7 @@ val sendZaloOriginalMediaPatch = bytecodePatch(
         // The chat input bar also mirrors the picker quality after selection.
         // This is the visible chip in the normal send flow.
         val chatInputBarQualityIndex = firstFieldInstructionIndex(
-            ChatInputBarQualityChipUpdate.instructionMatches.map { it.instruction },
+            ChatInputBarQualityChipUpdate.instructionMatches.map { it.index to it.instruction },
             "J0",
         )
         ChatInputBarQualityChipUpdate.method.replaceInstruction(
@@ -168,7 +171,7 @@ val sendZaloOriginalMediaPatch = bytecodePatch(
         // the other q read feeds metadata and is intentionally untouched.
         replaceEarliestMediaItemFlag(
             SelectedPhotoOriginalFlag.method,
-            SelectedPhotoOriginalFlag.instructionMatches.map { it.instruction },
+            SelectedPhotoOriginalFlag.instructionMatches.map { it.index to it.instruction },
         )
 
         // The picker checks these helpers directly before it calls e(). In
