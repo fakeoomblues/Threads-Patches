@@ -4,6 +4,11 @@ Release and changelog policy: [docs/release.md](docs/release.md#changelog-policy
 
 ## Unreleased
 
+## [1.6.3](https://github.com/zeldrisho/morphe-patches/compare/v1.6.2...v1.6.3) (2026-09-27)
+
+### 🐛 Bug Fixes
+* **Zalo - Prefer original photo quality:** Corrects instruction targeting so the original-quality photo flag is set on the outgoing media model, fixing image sending on Zalo `26.08.01`.
+
 ## [1.6.2](https://github.com/zeldrisho/morphe-patches/compare/v1.6.1...v1.6.2) (2026-09-26)
 
 ### 🐛 Bug Fixes

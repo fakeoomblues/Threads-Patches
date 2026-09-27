@@ -33,7 +33,6 @@ permissions:
 
 jobs:
   release:
-    name: Publish stable release
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

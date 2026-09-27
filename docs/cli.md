@@ -154,20 +154,38 @@ apksigner verify --print-certs /tmp/out.apk
 
 Aliases are case-sensitive: `morphe` and `Morphe` select different key
 entries. Verify the exact alias and matching key password before patching.
-Defaults: shared BKS `morphe.keystore`, alias `Morphe`, key password
-`Morphe`, store password empty (`<jar-dir>` is the Morphe JAR's
-directory — e.g. `~/.local/share/morphe/` per [toolchain §5](toolchain.md);
+Defaults for the shared BKS `morphe.keystore`: alias `Morphe`, key-entry
+password `Morphe`, and empty keystore password (`<jar-dir>` is the Morphe
+JAR's directory — e.g. `~/.local/share/morphe/` per [toolchain §5](toolchain.md);
 resolution priority `MORPHE_DATA_DIR` → `<jar-dir>/morphe-data/` → `~/morphe/`).
-`scripts/repatch.py` uses the repository's persistent `Morphe.keystore` first,
-then falls back to shared data-dir keys. For the repository key it uses an
-empty store password and the `Morphe` entry password by default. Override
-`KEYSTORE`, `KEYSTORE_PASSWORD`, and `KEYSTORE_ENTRY_PASSWORD` for a different
-persistent key. Consecutive builds using the same key have the same signing
-certificate and can be installed as updates with `android install`; switching
-keys still requires one uninstall. PKCS12/JKS inputs are auto-detected and
-converted to a BKS copy (original untouched). The repo's `Morphe.keystore` is
-BKS — plain `keytool` says "unrecognized format" unless loaded with the
-BouncyCastle provider from the Morphe JAR.
+`scripts/repatch.py` prefers the repository's persistent `Morphe.keystore`,
+then falls back to shared data-dir keys. It uses the same empty-store / `Morphe`
+entry-password defaults for the repository key. For a key at another path, its
+defaults differ: store password `Morphe`, empty key-entry password. Do not
+assume a Manager-exported key uses those external-path defaults. To update an
+app installed from Morphe Manager on a phone, use the keystore exported from
+that Manager installation so the patched APK has the same signing identity.
+If you trust the exported key and want the normal repository-key defaults,
+copy it to the ignored local `Morphe.keystore` file (never commit or share it), or explicitly
+set `KEYSTORE_PASSWORD` and `KEYSTORE_ENTRY_PASSWORD` to the credentials used
+when that key was created/exported. The documented Morphe defaults are not a
+guarantee for a particular exported file; an integrity-check failure means the
+store password/key format is wrong, not that the alias is necessarily wrong.
+The Manager alias/key must refer to the same signing identity as the installed
+app for Android to accept an update. An `INSTALL_FAILED_UPDATE_INCOMPATIBLE`
+error only proves the output and installed app certificates differ; it does
+not identify either certificate as stock. Confirm by comparing signing
+certificate SHA-256 fingerprints before considering uninstalling, which can
+remove app data.
+
+Override `KEYSTORE`, `KEYSTORE_ALIAS`, `KEYSTORE_PASSWORD`, and
+`KEYSTORE_ENTRY_PASSWORD` for a different persistent key. Consecutive builds
+using the same key have the same signing certificate and can be installed as
+updates; switching keys requires uninstalling first, which may remove app
+data. PKCS12/JKS inputs are auto-detected and converted to a BKS copy (original
+untouched). The repo's `Morphe.keystore` is BKS — plain `keytool` says
+"unrecognized format" unless loaded with the BouncyCastle provider from the
+Morphe JAR.
 
 ## Updating and debugging
 

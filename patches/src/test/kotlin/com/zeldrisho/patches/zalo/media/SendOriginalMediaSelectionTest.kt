@@ -20,14 +20,14 @@ class SendOriginalMediaSelectionTest {
     @Test
     fun selectionHelpersApplySingleFirstAndEarliestRules() {
         val instructions = listOf(
-            field("Ltest/Owner;", "OTHER"),
-            field("Ltest/Owner;", "Z1"),
-            field("Ltest/Owner;", "J0"),
-            field("Ltest/Owner;", "Z1"),
+            10 to field("Ltest/Owner;", "OTHER"),
+            25 to field("Ltest/Owner;", "Z1"),
+            40 to field("Ltest/Owner;", "J0"),
+            60 to field("Ltest/Owner;", "Z1"),
         )
-        assertEquals(1, singleFieldInstructionIndex(instructions.take(2), "Z1"))
-        assertEquals(2, firstFieldInstructionIndex(instructions, "J0"))
-        assertEquals(1, earliestFieldInstructionIndex(instructions, "Z1", "missing Z1"))
+        assertEquals(25, singleFieldInstructionIndex(instructions.take(2), "Z1"))
+        assertEquals(40, firstFieldInstructionIndex(instructions, "J0"))
+        assertEquals(25, earliestFieldInstructionIndex(instructions, "Z1", "missing Z1"))
         assertFailsWith<NoSuchElementException> { singleFieldInstructionIndex(instructions, "MISSING") }
         assertFailsWith<NoSuchElementException> { firstFieldInstructionIndex(instructions, "MISSING") }
         val error = assertFailsWith<IllegalStateException> {
@@ -46,7 +46,7 @@ class SendOriginalMediaSelectionTest {
         )
         replaceEarliestFieldInstruction(
             chip,
-            chipFields,
+            chipFields.mapIndexed { index, instruction -> index to instruction },
             "Z1",
             "const/4 v1, 0x2",
             "missing Z1",
@@ -61,7 +61,7 @@ class SendOriginalMediaSelectionTest {
             field("Lcom/zing/zalo/data/mediapicker/model/MediaItem;", "q"),
         )
         val media = syntheticMutableMethod(registerCount = 2, instructions = mediaFields)
-        replaceEarliestMediaItemFlag(media, mediaFields)
+        replaceEarliestMediaItemFlag(media, mediaFields.mapIndexed { index, instruction -> index to instruction })
         val mediaInstructions = media.implementation!!.instructions.toList()
         assertEquals(Opcode.CONST_4, mediaInstructions[0].opcode)
         assertEquals(Opcode.SGET_OBJECT, mediaInstructions[1].opcode)
@@ -71,12 +71,12 @@ class SendOriginalMediaSelectionTest {
     @Test
     fun mediaItemOriginalFlagSelectionIsClassSpecificAndEarliest() {
         val instructions = listOf(
-            field("Lother/MediaItem;", "q"),
-            field("Lcom/zing/zalo/data/mediapicker/model/MediaItem;", "metadata"),
-            field("Lcom/zing/zalo/data/mediapicker/model/MediaItem;", "q"),
-            field("Lcom/zing/zalo/data/mediapicker/model/MediaItem;", "q"),
+            11 to field("Lother/MediaItem;", "q"),
+            20 to field("Lcom/zing/zalo/data/mediapicker/model/MediaItem;", "metadata"),
+            35 to field("Lcom/zing/zalo/data/mediapicker/model/MediaItem;", "q"),
+            50 to field("Lcom/zing/zalo/data/mediapicker/model/MediaItem;", "q"),
         )
-        assertEquals(2, earliestMediaItemFlagIndex(instructions))
+        assertEquals(35, earliestMediaItemFlagIndex(instructions))
         val error = assertFailsWith<IllegalStateException> { earliestMediaItemFlagIndex(instructions.take(2)) }
         assertEquals("MediaItem original flag read moved; re-hunt Lbq0/g->a()", error.message)
     }
