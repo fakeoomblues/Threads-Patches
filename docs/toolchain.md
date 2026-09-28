@@ -9,7 +9,7 @@ Fedora WSL includes Python and the shell tools. Install the additional commands
 used by repo development/release workflows:
 
 ```fish
-sudo dnf install -y uv jq fish ripgrep unzip binutils
+sudo dnf install -y uv git gh jq fish ripgrep unzip binutils
 ```
 
 Install Homebrew by following [brew.sh](https://brew.sh), then install Java and
@@ -28,6 +28,7 @@ Set this in `~/.config/fish/config.fish`:
 
 ```fish
 set -gx ANDROID_HOME "$HOME/Android/Sdk"
+fish_add_path ~/.local/bin
 ```
 
 ### SDK packages: build requirements versus analysis utilities
