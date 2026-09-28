@@ -28,7 +28,6 @@ Set this in `~/.config/fish/config.fish`:
 
 ```fish
 set -gx ANDROID_HOME "$HOME/Android/Sdk"
-fish_add_path ~/.local/bin
 ```
 
 ### SDK packages: build requirements versus analysis utilities
@@ -50,7 +49,7 @@ android sdk install platform-tools
 # Optional: select a stable package ID from `android sdk list --all 'ndk/*'`:
 android sdk install "ndk;29.0.14206865"
 android sdk list
-fish_add_path ~/Android/Sdk/platform-tools
+fish_add_path ~/.local/bin ~/Android/Sdk/platform-tools
 # After a Gradle build installs Build-Tools:
 fish_add_path (find ~/Android/Sdk/build-tools -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)
 # Optional: add the NDK compiler tools only when doing native-code analysis:
