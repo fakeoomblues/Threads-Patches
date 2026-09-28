@@ -99,10 +99,10 @@ class RepatchTest(unittest.TestCase):
         )
         for key in ("KEYSTORE", "MPP"):
             Path(self.env[key]).touch()
-        # Seed JAR discovery: newest morphe-desktop-*-all.jar in the primary share dir.
+        # Seed JAR discovery with a valid versioned JAR in the primary share dir.
         self.share = self.home / ".local/share/morphe"
         self.share.mkdir(parents=True)
-        self.share_jar = self.share / "morphe-desktop-test-all.jar"
+        self.share_jar = self.share / "morphe-desktop-0.0.1-all.jar"
         self.share_jar.touch()
         self.input = self.root / "app input.apkm"
         self.input.touch()
@@ -309,18 +309,20 @@ class RepatchTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(Path(self.env["JAR_CAPTURE"]).read_text(), str(primary))
 
-    def test_jar_discovery_finds_newest_share_jar(self):
-        """Verify discovery picks the newest upstream JAR within a share dir."""
+    def test_jar_discovery_selects_highest_version_not_newest_mtime(self):
+        """Choose the highest parsed JAR version despite misleading mtimes."""
         self.share_jar.unlink()
-        old = self.share / "morphe-desktop-1-all.jar"
-        new = self.share / "morphe-desktop-2-all.jar"
-        old.touch()
-        new.touch()
-        os.utime(old, (100, 100))
-        os.utime(new, (200, 200))
+        older_version = self.share / "morphe-desktop-1.9.0-all.jar"
+        highest_version = self.share / "morphe-desktop-1.10.0-all.jar"
+        older_version.touch()
+        highest_version.touch()
+        os.utime(older_version, (200, 200))
+        os.utime(highest_version, (100, 100))
         result = self.run_helper()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(Path(self.env["JAR_CAPTURE"]).read_text(), str(new))
+        self.assertEqual(
+            Path(self.env["JAR_CAPTURE"]).read_text(), str(highest_version)
+        )
 
     def test_jar_discovery_missing_error(self):
         """Verify the missing-JAR error names the filesystem locations and --jar."""

@@ -9,7 +9,7 @@ Fedora WSL includes Python and the shell tools. Install the additional commands
 used by repo development/release workflows:
 
 ```fish
-sudo dnf install -y uv git gh jq
+sudo dnf install -y uv jq fish ripgrep unzip binutils
 ```
 
 Install Homebrew by following [brew.sh](https://brew.sh), then install Java and
@@ -49,8 +49,9 @@ android sdk install platform-tools
 # Optional: select a stable package ID from `android sdk list --all 'ndk/*'`:
 android sdk install "ndk;29.0.14206865"
 android sdk list
-fish_add_path /home/linuxbrew/.linuxbrew/bin ~/.local/bin
-fish_add_path ~/Android/Sdk/platform-tools ~/Android/Sdk/build-tools/36.0.0
+fish_add_path ~/Android/Sdk/platform-tools
+# After a Gradle build installs Build-Tools:
+fish_add_path (find ~/Android/Sdk/build-tools -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)
 # Optional: add the NDK compiler tools only when doing native-code analysis:
 fish_add_path ~/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/linux-x86_64/bin
 ```
@@ -59,7 +60,8 @@ Morphe sets `compileSdk = 36`; AGP chooses and installs its compatible build-too
 (the repo does not pin `buildToolsVersion`). [Gradle can download missing build
 packages](https://developer.android.com/studio/intro/update#download-with-gradle)
 with an existing SDK, accepted licenses, and network access. Add the resulting
-AGP-selected `build-tools` directory to PATH for `aapt` and `apksigner`.
+AGP-selected `build-tools` directory to PATH when using tools such as `aapt`
+and `apksigner`.
 
 `platform-tools` supplies `adb`; build-tools supplies `aapt`, `aapt2`, `apksigner`,
 and `zipalign`. An already-installed suitable build-tools version is fine; adjust
@@ -114,7 +116,8 @@ release tooling uses `gh`, `python3`, and `jq`.
 Morphe Desktop is distributed upstream as a JAR; this repo does not configure a
 package-manager package for it. Fetch the latest stable release without hard-coding
 a version, and verify it against the SHA-256 digest published in GitHub release
-metadata before using it:
+metadata before using it. This release digest is an integrity check against GitHub's
+published asset metadata, not an independent trust anchor:
 
 ```bash
 set -euo pipefail
@@ -124,7 +127,7 @@ tag=$(jq -r '.tagName' <<< "$release")
 version=${tag#v}
 asset="morphe-desktop-${version}-all.jar"
 digest=$(jq -r --arg asset "$asset" \
-  '.assets[] | select(.name == $asset) | .digest | sub("^sha256:"; "")' \
+  '.assets[] | select(.name == $asset) | (.digest // "") | sub("^sha256:"; "")' \
   <<< "$release")
 [[ "$digest" =~ ^[[:xdigit:]]{64}$ ]] || { echo "Missing published SHA-256 for $asset" >&2; exit 1; }
 mkdir -p "$HOME/.local/share/morphe"
@@ -140,8 +143,9 @@ must be revalidated against the target APK. Do not treat SDK verification as
 passed or install an output that failed patching.
 
 `morphe-desktop-*-all.jar` starts the GUI without a subcommand, the CLI with one.
-Do not replace a JAR during an active patch run. `scripts/repatch.py` discovers the
-newest JAR in this directory; `--jar <path>` pins a specific one. No environment
+Do not replace a JAR during an active patch run. `scripts/repatch.py` discovers
+the highest numeric version in this directory; `--jar <path>` pins a specific one.
+No environment
 configuration is needed for its default JAR, bundle, or keystore discovery. See
 [CLI patching](cli.md) for commands, runtime data-directory resolution, and
 [signing](cli.md#signing) for key/password selection.
@@ -166,8 +170,8 @@ and input SHA-256.
 ## Build-tool behavior
 
 Extensions package compiled DEX through Morphe's `extension` plugin without a
-standalone R8 configuration. Do not claim shrinker safety until the resolved build
-confirms whether R8 runs; the bundle contract checks resulting DEX descriptors and flags.
+standalone R8 configuration. Shrinker behavior is not established by this repository's
+configuration; the bundle contract checks resulting DEX descriptors and flags.
 
 ## Verify setup
 

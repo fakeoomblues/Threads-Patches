@@ -59,10 +59,6 @@ jobs:
           # The legacy `tools` package was removed from the Android repository.
           packages: platform-tools
 
-      - name: Add Gradle-managed Build-Tools to PATH
-        if: matrix.language == 'java-kotlin'
-        run: echo "$ANDROID_HOME/build-tools/36.0.0" >> "$GITHUB_PATH"
-
       - name: Initialize CodeQL
         uses: github/codeql-action/init@88585263c0627ee42c0e1c5143a112c8d6f4aa18 # v4.38.2
         with:
