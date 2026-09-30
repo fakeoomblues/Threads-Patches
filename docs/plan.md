@@ -34,12 +34,13 @@ See [local-data investigation rules](reverse-engineering.md#learning-from-other-
 
 ## Remaining Zalo investigations
 
-### P1: Configurable native backup interval
+### P1: Configurable native backup interval — implemented, qualification pending
 
-Trace `SERVER_CONFIG_SYNC_MESSAGE_INTERVAL_*` for 1/3/6/12-hour scheduling while
-preserving native opt-in, authentication, network, and backup guards. Prove complete
-backup/restore round trips, not timer execution. Measure battery, wakeups, network,
-and account switching against stock/control before setting thresholds.
+The opt-in patch overrides Zalo's native scheduling interval to 1, 3, 6, or 12
+hours while preserving native opt-in, account, network, and backup guards. This
+is not yet device-validated. Prove complete backup/restore round trips, not timer
+execution; measure battery, wakeups, network, and account switching against
+stock/control before treating behavior as qualified.
 
 ### P2: Inbox and navigation controls
 
@@ -58,12 +59,38 @@ links, and safe in-app fallback.
 
 ### P2: Analytics and privacy candidates
 
-Trace analytics Room DAO/upload workers before suppressing writes; avoid null DAOs.
-Decide whether a separate opt-in patch is justified. Advertising-ID reduction needs
-all app/SDK consumers checked while preserving unrelated attribution/advertising.
-Compare search keypress/focus telemetry with existing coverage; patch only gaps,
-preserving suggestions and searches. Notification history and call recording remain
-separate default-off investigations requiring consent, privacy, storage, and second-account tests.
+The existing telemetry patch suppresses selected Room analytics writes,
+Crashlytics diagnostics, and native crash-handler registration. Static inspection
+of the pinned base DEX found Firebase Analytics SDK classes and collection flags,
+but no app `FirebaseAnalytics.logEvent` callers in the inspected base DEX; feature
+splits and runtime behavior were not qualified. Do not add a Firebase service
+interception patch based only on SDK presence. Reopen this only if split/runtime
+evidence demonstrates active measurement. Framework-level measurement-service
+blocking is not supported by the current patch mechanism. Advertising-ID
+reduction needs all app/SDK consumers checked while preserving unrelated
+attribution/advertising. Compare search keypress/focus
+telemetry with existing coverage; patch only gaps, preserving suggestions and
+searches. Notification history and call recording remain separate default-off
+investigations requiring consent, privacy, storage, and second-account tests.
+
+Investigate ad-reporting coverage beyond the existing offline-tracking suppression.
+The pinned base DEX contains the `AdsTrackingReceiver` actions `HitUrls` and
+`SubmitBatch`, and Adtima code has explicit impression/click tracking paths.
+The current patch set does not yet fingerprint these reporting paths. Trace their
+callers, payload scope, and ordinary analytics consumers; suppress only proven
+ad-specific events and preserve non-ad diagnostics and app functionality. Static
+anchors are leads, not behavior validation.
+
+### P2: Ad rendering and feed filtering
+
+Investigate ZInstant placements across the Timeline, Messages tab, Story viewer,
+and Zalo Video. The existing patches cover selected ad configuration, request,
+and feed-binding paths, but do not establish complete rendering coverage. For
+pre-parse feed filtering, prove the ad markers cannot occur on ordinary posts and
+preserve pagination, item counts, and mixed media. Verify removing a Messages-tab
+row does not corrupt unread counts, adapter positions, or normal chat navigation.
+Treat video-request suppression as risky: prove playback continues or fails safely
+before considering it enabled by default.
 
 ### P2: Content and playback controls
 

@@ -3,6 +3,18 @@
 Cross-app backlog only. Validation: [device and build checks](validation.md).
 Zalo candidates: [plan](plan.md). Publishing: [release](release.md).
 
+## Cross-app feature investigations
+
+- **P2 — Threads tracking-link sanitization:** Trace supported-version share and
+  copy paths for tracking parameters; strip only known tracking fields while
+  preserving content identifiers, fragments, and unrelated query parameters.
+  Avoid global clipboard interception. Test copied/shared URLs from posts,
+  profiles, and media, including malformed and non-Threads clipboard content.
+  NexAlloy-XES at `9033a2eccc011a36a945a41eb47c90a18833b3a2` contains a runtime
+  clipboard-hook candidate, but it is not a compatible Morphe implementation.
+  Use it only as a search lead; independently verify target bytecode and review
+  license obligations before adapting any code. No NexAlloy source is copied.
+
 ## Outstanding private validation
 
 These require devices/private artifacts; documentation and synthetic tests do not complete them.
