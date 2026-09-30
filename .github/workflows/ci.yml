@@ -51,8 +51,12 @@ jobs:
         run: |
           brew install openjdk@21
           brew install --cask android-cli
-          echo "$(brew --prefix openjdk@21)/bin" >> "$GITHUB_PATH"
-          echo "ANDROID_HOME=$HOME/Android/Sdk" >> "$GITHUB_ENV"
+          {
+            echo "$(brew --prefix openjdk@21)/bin" >> "$GITHUB_PATH"
+            echo "JAVA_HOME=$(brew --prefix openjdk@21)"
+            echo "ANDROID_HOME=$HOME/Android/Sdk"
+            echo "ANDROID_SDK_ROOT="
+          } >> "$GITHUB_ENV"
 
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
