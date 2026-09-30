@@ -4,6 +4,9 @@ Release and changelog policy: [docs/release.md](docs/release.md#changelog-policy
 
 ## Unreleased
 
+### ✨ New Features
+* **Zalo - Configurable native backup interval:** Adds an opt-in patch option to set automatic message-backup checks to 1, 3, 6, or 12 hours on `26.08.01`; Zalo's native backup, account, and target-validity guards remain in place. Device behavior is not yet validated.
+
 ## [1.6.3](https://github.com/zeldrisho/morphe-patches/compare/v1.6.2...v1.6.3) (2026-09-27)
 
 ### 🐛 Bug Fixes

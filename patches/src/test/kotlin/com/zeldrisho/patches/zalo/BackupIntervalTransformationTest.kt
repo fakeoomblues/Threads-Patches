@@ -1,0 +1,60 @@
+package com.zeldrisho.patches.zalo
+
+import com.android.tools.smali.dexlib2.Opcode
+import com.android.tools.smali.dexlib2.iface.instruction.NarrowLiteralInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction21c
+import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction3rc
+import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction11x
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableStringReference
+import com.zeldrisho.patches.testing.syntheticMutableMethod
+import com.zeldrisho.patches.zalo.backup.overrideBackupInterval
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+
+class BackupIntervalTransformationTest {
+    private fun scheduler(key: String = "SERVER_CONFIG_SYNC_MESSAGE_INTERVAL_") = syntheticMutableMethod(
+        registerCount = 6,
+        instructions = listOf(
+            ImmutableInstruction21c(Opcode.CONST_STRING, 5, ImmutableStringReference(key)),
+            ImmutableInstruction3rc(
+                Opcode.INVOKE_STATIC_RANGE,
+                4,
+                0,
+                ImmutableMethodReference(
+                    "Lu40/p0;", "Y", listOf("J", "Z", "Ljava/lang/String;"), "J",
+                ),
+            ),
+            ImmutableInstruction11x(Opcode.MOVE_RESULT_WIDE, 4),
+        ),
+    )
+
+    @Test
+    fun overridesOnlyIntervalResultWithSelectedMilliseconds() {
+        val method = scheduler()
+        overrideBackupInterval(method, "3")
+        val result = method.implementation!!.instructions[2]
+        assertEquals(Opcode.CONST_WIDE_32, result.opcode)
+        assertEquals(4, (result as OneRegisterInstruction).registerA)
+        assertEquals(10_800_000, (result as NarrowLiteralInstruction).narrowLiteral)
+    }
+
+    @Test
+    fun supportsEachAllowedIntervalInMilliseconds() {
+        mapOf("1" to 3_600_000, "3" to 10_800_000, "6" to 21_600_000, "12" to 43_200_000).forEach { (hours, millis) ->
+            val method = scheduler()
+            overrideBackupInterval(method, hours)
+            assertEquals(millis, (method.implementation!!.instructions[2] as NarrowLiteralInstruction).narrowLiteral)
+        }
+    }
+
+    @Test
+    fun rejectsUnsupportedIntervalAndMissingNativeKey() {
+        assertFailsWith<IllegalArgumentException> { overrideBackupInterval(scheduler(), "2") }
+        assertFailsWith<IllegalStateException> {
+            overrideBackupInterval(scheduler("UNRELATED_CONFIG_KEY"), "6")
+        }
+    }
+}
