@@ -40,6 +40,7 @@ public final class FeedAdFilter {
    * pay lookup costs on every subsequent item.
    */
   private static final Object CACHE_LOCK = new Object();
+
   private static final String TAG = "ThreadsFeedAdFilter";
   private static volatile boolean fallbackWarningLogged;
 
@@ -65,7 +66,10 @@ public final class FeedAdFilter {
 
   /** Patch-time-resolved member names; null values use legacy names as a warned fallback. */
   public static List<?> filterAds(
-      List<?> items, String mediaPredicateName, String mediaAccessorName, String threadAccessorName) {
+      List<?> items,
+      String mediaPredicateName,
+      String mediaAccessorName,
+      String threadAccessorName) {
     return filterAds(items, mediaPredicateName, mediaAccessorName, threadAccessorName, null);
   }
 
@@ -87,7 +91,12 @@ public final class FeedAdFilter {
       int index = 0;
       while (iterator.hasNext()) {
         Object item = iterator.next();
-        if (isAdUnit(item, mediaPredicateName, mediaAccessorName, threadAccessorName, threadItemsAccessorName)) {
+        if (isAdUnit(
+            item,
+            mediaPredicateName,
+            mediaAccessorName,
+            threadAccessorName,
+            threadItemsAccessorName)) {
           if (out == null) {
             out = new ArrayList<>(items.size() - 1);
             Iterator<?> prefixIterator = items.iterator();
@@ -144,7 +153,9 @@ public final class FeedAdFilter {
         }
         if (threadItems instanceof List) {
           for (Object ti : (List<?>) threadItems) {
-            if (ti != null && (callDed(ti) || callMediaPredicate(callAny(ti, "CIV", "CDh"), mediaPredicateName))) {
+            if (ti != null
+                && (callDed(ti)
+                    || callMediaPredicate(callAny(ti, "CIV", "CDh"), mediaPredicateName))) {
               return true;
             }
           }
@@ -178,7 +189,8 @@ public final class FeedAdFilter {
       synchronized (FeedAdFilter.class) {
         if (!fallbackWarningLogged) {
           try {
-            Log.w(TAG, "Patch-time feed member resolution unavailable; falling back to legacy names");
+            Log.w(
+                TAG, "Patch-time feed member resolution unavailable; falling back to legacy names");
           } catch (Throwable ignored) {
             // Android logging is absent in the plain JVM extension tests.
           }

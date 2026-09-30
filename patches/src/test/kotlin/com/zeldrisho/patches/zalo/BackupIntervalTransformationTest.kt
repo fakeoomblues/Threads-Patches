@@ -3,9 +3,9 @@ package com.zeldrisho.patches.zalo
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.NarrowLiteralInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
+import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction11x
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction21c
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction3rc
-import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction11x
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableStringReference
 import com.zeldrisho.patches.testing.syntheticMutableMethod
@@ -24,7 +24,10 @@ class BackupIntervalTransformationTest {
                 4,
                 0,
                 ImmutableMethodReference(
-                    "Lu40/p0;", "Y", listOf("J", "Z", "Ljava/lang/String;"), "J",
+                    "Lu40/p0;",
+                    "Y",
+                    listOf("J", "Z", "Ljava/lang/String;"),
+                    "J",
                 ),
             ),
             ImmutableInstruction11x(Opcode.MOVE_RESULT_WIDE, 4),

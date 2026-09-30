@@ -23,7 +23,10 @@ class ThreadsFingerprintApkmHarnessTest {
     private fun context(version: String, code: String): BytecodePatchContext {
         val config = PatcherConfig(apkFile = temp.newFile("input-$version.apk"), temporaryFilesPath = temp.newFolder())
         val metadata = PackageMetadata::class.java.constructors.single().newInstance(
-            "com.instagram.barcelona", version, code, null,
+            "com.instagram.barcelona",
+            version,
+            code,
+            null,
         )
         return BytecodePatchContext::class.java
             .getConstructor(PatcherConfig::class.java, PackageMetadata::class.java)
@@ -66,18 +69,26 @@ class ThreadsFingerprintApkmHarnessTest {
             val mediaPredicate = if (helper.size == 1) {
                 val ref = helper.single().originalMethod
                 scan(all, mediaAdPredicate(ref), patchContext)
-            } else emptyList()
+            } else {
+                emptyList()
+            }
             println("$version Media predicate candidates: " + mediaPredicate.joinToString { "${it.originalMethod.definingClass}->${it.originalMethod.name}()${it.originalMethod.returnType}" })
             val anchors = scan(all, FeedContentAccessor, patchContext)
             val mediaAccessors = if (anchors.size == 1) {
                 scan(all, feedWrapperAccessor(anchors.single().originalMethod, "Lcom/instagram/feed/media/Media;"), patchContext)
-            } else emptyList()
+            } else {
+                emptyList()
+            }
             val threadAccessors = if (anchors.size == 1) {
                 scan(all, feedThreadAccessor(anchors.single().originalMethod), patchContext)
-            } else emptyList()
+            } else {
+                emptyList()
+            }
             val threadItemsAccessors = if (threadAccessors.size == 1) {
                 scan(all, threadItemsAccessor(threadAccessors.single().originalMethod), patchContext)
-            } else emptyList()
+            } else {
+                emptyList()
+            }
             return linkedMapOf(
                 "helper" to helper.size,
                 "Media predicate" to mediaPredicate.size,

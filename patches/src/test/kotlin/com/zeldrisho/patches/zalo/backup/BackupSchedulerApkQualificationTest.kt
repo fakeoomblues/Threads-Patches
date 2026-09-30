@@ -19,7 +19,10 @@ class BackupSchedulerApkQualificationTest {
     private fun context(): BytecodePatchContext {
         val config = PatcherConfig(apkFile = temporary.newFile("input.apk"), temporaryFilesPath = temporary.newFolder())
         val metadata = PackageMetadata::class.java.constructors.single().newInstance(
-            "com.zing.zalo", "26.08.01", "260801903", null,
+            "com.zing.zalo",
+            "26.08.01",
+            "260801903",
+            null,
         )
         return BytecodePatchContext::class.java.getConstructor(PatcherConfig::class.java, PackageMetadata::class.java)
             .newInstance(config, metadata)
