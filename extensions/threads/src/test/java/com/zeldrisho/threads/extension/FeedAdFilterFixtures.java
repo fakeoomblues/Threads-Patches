@@ -161,5 +161,4 @@ final class FeedAdFilterFixtures {
       return true;
     }
   }
-
 }

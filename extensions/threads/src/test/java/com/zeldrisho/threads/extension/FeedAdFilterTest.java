@@ -1,5 +1,6 @@
 package com.zeldrisho.threads.extension;
 
+import static com.zeldrisho.threads.extension.FeedAdFilterFixtures.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -8,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
-import static com.zeldrisho.threads.extension.FeedAdFilterFixtures.*;
 import java.util.List;
 import org.junit.Test;
 

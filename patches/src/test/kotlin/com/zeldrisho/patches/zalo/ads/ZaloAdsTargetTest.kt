@@ -327,6 +327,4 @@ class ZaloAdsTargetTest {
         assertEquals(Opcode.CONST_4, edited[moveIndex + 1].opcode)
         assertEquals(0, (edited[moveIndex + 1] as OneRegisterInstruction).registerA)
     }
-
-
 }

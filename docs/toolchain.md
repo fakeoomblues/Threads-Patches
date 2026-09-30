@@ -135,12 +135,14 @@ gh release download "$tag" --repo "$repo" --pattern "$asset" --dir "$HOME/.local
 printf '%s  %s\n' "$digest" "$HOME/.local/share/morphe/$asset" | sha256sum -c -
 ```
 
-Morphe Desktop 1.17.0 was checked locally against the pinned Zalo APKM. It still
-fails Morphe's internal DEX hierarchy verification on missing Google IMA classes,
-in both `FULL` and `STRIP_FAST` bytecode modes; upgrading alone does not unblock
-that APK. The latest-release download above may select a newer version, which
-must be revalidated against the target APK. Do not treat SDK verification as
-passed or install an output that failed patching.
+Morphe Desktop 1.17.0 was checked locally against the pinned Zalo APKM. `FULL`
+and `STRIP_FAST` fail Morphe's internal DEX hierarchy verification because
+Google IMA classes are absent. `STRIP_SAFE` can produce an unsigned output when
+SDK verification is omitted, but `--verify-with-sdk` still fails on those missing
+classes. This is not a successful qualification: do not install or release that
+output. The latest-release download above may select a newer version, which must
+be revalidated against the target APK; record a passing SDK and device check
+before treating the APK as supported.
 
 `morphe-desktop-*-all.jar` starts the GUI without a subcommand, the CLI with one.
 Do not replace a JAR during an active patch run. `scripts/repatch.py` discovers
