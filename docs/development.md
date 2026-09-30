@@ -22,7 +22,7 @@ both call sites and `patches/build.gradle.kts` wiring. Each app must call only i
 matching extension. `extendWith(...)` loads artifacts through the bundle classloader.
 
 ```text
-original split APK → jadx/apktool → fingerprint + patch → .mpp → Morphe → patched APK → device validation
+original split APK → baksmali smali → fingerprint + patch → .mpp → Morphe → patched APK → device validation
 ```
 
 ## Verify

@@ -94,7 +94,7 @@ def main():
 - Permissions: {" ".join(re.findall(r"uses-permission: name='([^']+)", badging)) or "none listed"}
 
 ## Recommended next step
-Proceed with jadx and scripts/extract_smali.py, then scripts/hunt_signals.py.
+Run scripts/extract_smali.py, then scripts/hunt_signals.py against the extracted smali.
 """
         Path(a.output).write_text(report)
         print(f"✅ Recon written to {a.output}")

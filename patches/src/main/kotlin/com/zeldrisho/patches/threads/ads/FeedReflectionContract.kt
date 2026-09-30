@@ -22,7 +22,7 @@ internal val feedReflectionMembers434 = listOf(
 /**
  * 445.0.0.46.83 member set (versionCode 511507647).
  *
- * Re-hunted from the original APKMirror bundle (base.apk via apktool):
+ * Re-hunted from the original APKMirror bundle (base APK smali):
  * - Feed merge moved BarcelonaFeedCache.A0F -> A0G (same param shape, .locals 37).
  * - Wrapper LX/3oS -> LX/0hJ; A05/A02 method names kept, but A02 now returns
  *   `com.instagram.api.schemas.ThreadIntf` (barcelona/model/ThreadIntf is gone).

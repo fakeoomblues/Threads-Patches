@@ -16,7 +16,7 @@ Install Homebrew by following [brew.sh](https://brew.sh), then install Java and
 APK analysis/Android SDK tools:
 
 ```fish
-brew install openjdk@21 jadx apktool android-cli
+brew install openjdk@21 android-cli
 brew unlink openjdk
 brew link openjdk@21
 ```
@@ -79,7 +79,6 @@ of the maintained toolchain; use `rg` for repository searches.
 | Tool | Command | Use |
 | --- | --- | --- |
 | Frida | `uv tool install frida-tools` (optional) | Runtime instrumentation; install only when needed |
-| Kaggle | `uv tool install kaggle` | Required by `scripts/remote_decompile.py` |
 | APKiD | `uvx apkid app.apk` | On-demand recon |
 | objection | `uvx objection --help` | On-demand dynamic triage; never assume a persistent install |
 
@@ -87,9 +86,8 @@ of the maintained toolchain; use `rg` for repository searches.
 environments. Install Frida tooling only for runtime instrumentation, with a
 matching-version/ABI `frida-server` **on the device**:
 [releases](https://github.com/frida/frida/releases), [Android setup](https://frida.re/docs/android/).
-Kaggle requires credentials and a private notebook; see [remote decompilation](reverse-engineering.md#remote-decompilation-for-large-apks).
-Host analysis tools are `jadx` (Java), `apktool` (resources/smali), `rg` (search),
-and `strings` (DEX strings).
+Use `scripts/extract_smali.py` with baksmali for canonical smali output; `rg` and
+`strings` are useful for searching extracted DEX evidence.
 
 ## 3. Device access
 
@@ -184,8 +182,6 @@ java -version
 android sdk list
 adb version
 aapt version
-jadx --version
-apktool --version
 ```
 
 Then run [canonical verification](development.md#verify), followed by

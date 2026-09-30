@@ -260,7 +260,7 @@ Policy first, exception second:
   over unordered `strings`.
 - **Only touch `instructionMatches` when the fingerprint defines `filters`.**
 - **Use `"L"` for obfuscated parameter types** (bare `L` = any object type).
-- **Always verify against smali**, never jadx Java alone.
+- **Always verify against extracted smali.**
 - **Declare fingerprints as named `object`s** so match failures print a useful name.
 - When editing several instructions in one method, work **last index first** (or
   re-match after each edit) so earlier edits don't shift later indices.
