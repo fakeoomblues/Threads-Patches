@@ -8,7 +8,7 @@ Install Homebrew by following [brew.sh](https://brew.sh). Repository development
 and Android/Java tools are managed with Brew:
 
 ```sh
-brew install uv pre-commit jq ripgrep ruff actionlint openjdk@21
+brew install uv pre-commit ruff actionlint openjdk@21
 brew install --cask android-cli
 brew unlink openjdk
 brew link openjdk@21
@@ -110,7 +110,7 @@ network/firewall must allow access to the phone.
 Use a GitHub PAT with `read:packages` for the Morphe Gradle registry:
 `GITHUB_ACTOR` / `GITHUB_TOKEN`, or `gpr.user` / `gpr.key` in private
 `~/.gradle/gradle.properties`. Never commit credentials. No JS toolchain is required;
-release tooling uses `gh`, `python3`, and `jq`.
+release tooling uses `gh` and `python3`.
 
 ## 5. Morphe CLI and GUI share one JAR
 
@@ -124,12 +124,10 @@ published asset metadata, not an independent trust anchor:
 set -euo pipefail
 repo=MorpheApp/morphe-desktop
 release=$(gh release view --repo "$repo" --json tagName,assets)
-tag=$(jq -r '.tagName' <<< "$release")
+tag=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["tagName"])' <<< "$release")
 version=${tag#v}
 asset="morphe-desktop-${version}-all.jar"
-digest=$(jq -r --arg asset "$asset" \
-  '.assets[] | select(.name == $asset) | (.digest // "") | sub("^sha256:"; "")' \
-  <<< "$release")
+digest=$(python3 -c 'import json,sys; asset=sys.argv[1]; print(next((a.get("digest", "").removeprefix("sha256:") for a in json.load(sys.stdin)["assets"] if a["name"] == asset), ""))' "$asset" <<< "$release")
 [[ "$digest" =~ ^[[:xdigit:]]{64}$ ]] || { echo "Missing published SHA-256 for $asset" >&2; exit 1; }
 mkdir -p "$HOME/.local/share/morphe"
 gh release download "$tag" --repo "$repo" --pattern "$asset" --dir "$HOME/.local/share/morphe"
