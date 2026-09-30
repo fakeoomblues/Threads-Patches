@@ -12,7 +12,7 @@ RECON → DECOMPILE → HUNT → WRITE → TEST
 | Stage | Question | Output |
 | ----- | -------- | ------ |
 | Recon | What app is this? | Identity + protections + framework notes |
-| Decompile | What does it do? | `decompiled/` (jadx Java) + `smali/` (apktool) |
+| Decompile | What does it do? | Optional JADX Java plus canonical `smali/` (baksmali) |
 | Hunt | Where is the check? | Smali-verified target (class, method, instruction sequence) |
 | Write | How to bypass it? | `Fingerprints.kt` + `*Patch.kt` under `patches/src/main/kotlin/com/zeldrisho/patches/<app>/` |
 | Test | Does it match? | `./gradlew buildAndroid`, then apply the `.mpp` in Morphe |
@@ -20,10 +20,11 @@ RECON → DECOMPILE → HUNT → WRITE → TEST
 ## Analysis workspace
 
 Analysis lives in the gitignored `analysis/<app>/<version>/` workspace. Keep APKs
-in `apk/`, JADX output in `decompiled/`, standalone smali in `smali/`, recovered
-names in `mapping/`, evidence in `notes/`, and disposable experiments in
-`runs/<run-name>/`. Apktool's complete project belongs in `decoded/` (usually
-`decoded/base/`); its `smali*` directories are not a separate top-level workspace.
+in `apk/`, optional JADX output in `decompiled/`, canonical baksmali output in
+`smali/`, recovered names in `mapping/`, evidence in `notes/`, and disposable
+experiments in `runs/<run-name>/`. Apktool projects used for resource/manifest
+inspection belong in `decoded/`; do not use their embedded `smali*` output as the
+canonical bytecode evidence.
 Keep split inputs together. Record version code, ABI, source URL, and SHA-256 in
 `notes/recon.md`; never commit analysis inputs or outputs or put secrets, account
 data, or tokens in notes or logs. `<analysis>` below refers to this workspace.
@@ -90,12 +91,12 @@ Save as `<analysis>/notes/recon.md` (rename the APK to `<app>_<version>.<ext>`).
 
 ```bash
 jadx -d <analysis>/decompiled <analysis>/apk/<app>_<version>.apkm
-python3 scripts/extract_smali.py <analysis>/apk/<app>_<version>.apkm <analysis>/smali
+python3 scripts/extract_smali.py <analysis>/apk/<app>_<version>.apkm
 ```
 
 ### JADX escalation for difficult classes
 
-JADX is a navigation/decompilation aid, not the source of truth. When a class or
+JADX is optional navigation/decompilation aid, not the source of truth. When a class or
 method is missing or reconstructed incorrectly, retry only the relevant input
 with progressively less reconstruction:
 
@@ -106,9 +107,9 @@ jadx --decompilation-mode fallback --single-class 'com.example.Target' \
   <analysis>/<app>/apk/<app>_<version>.apkm
 ```
 
-Check `jadx --help` first because options vary by installed version. These
-outputs are for locating callers and strings only; verify the final target in
-smali from every DEX. `--raw-cfg` and `--call-graph json` are optional aids when
+Check `jadx --help` first because options vary by installed version. Java output
+is for locating callers and strings only; verify final targets against canonical
+baksmali output from every DEX. `--raw-cfg` and `--call-graph json` are optional aids when
 control flow or callers remain unclear.
 
 ### Remote decompilation for large APKs
