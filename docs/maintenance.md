@@ -28,12 +28,11 @@ These require devices/private artifacts; documentation and synthetic tests do no
 No private APK results are recorded here. Keep stock and output signing identities
 distinct; retain sanitized results in the release/PR record and raw artifacts outside Git.
 
-## Outstanding CI validation
+## CI validation and comparison
 
-CI/release workflow updates enable Gradle caching; CI uses Homebrew to install pre-commit.
-They pass local workflow linting, but the updated workflows have not yet completed
-on GitHub. Check the next hosted run for cache restore/save behavior and expected
-verification results.
+The updated PR CI passed on GitHub (run [36753516471](https://github.com/zeldrisho/morphe-patches/actions/runs/36753516471)); `verify` completed and uploaded the `.mpp` artifact. CI uses the runner-provided Android SDK and Gradle resolves missing platform/build-tools packages; no `android-cli` installation is needed.
+
+Compared with the successful main baseline ([36290078042](https://github.com/zeldrisho/morphe-patches/actions/runs/36290078042)), the build job took 1m49s vs 2m56s, and `Gradle verify` took about 1m39s vs 1m56s. Treat this as a single-run observation, not a performance claim: the jobs ran on different dates, and CI/code inputs changed. The baseline Android SDK cache missed; the PR's Gradle cache was read-only and restored/saved zero entries, so this does not compare warm Gradle-cache performance. A main-branch run is needed to seed the Gradle cache, followed by a comparable subsequent run to assess warm-cache behavior.
 
 ## Coverage and test architecture
 
