@@ -49,42 +49,26 @@ val hideAdsPatch = bytecodePatch(
     execute {
         validateFeedReflectionContract { classDefByOrNull(it) }
         val method = FeedMergeMethod.matchAll(1..1).single().method
-        val helpers = MediaAdPredicateHelper.matchAll()
-        check(helpers.size == 1) {
-            "Threads Media ad-predicate helper fingerprint matched ${helpers.size} methods; expected exactly one"
-        }
-        val helper = helpers.single().originalMethod
-        val predicates = mediaAdPredicate(helper).matchAll()
-        check(predicates.size == 1) {
-            "Threads Media ad-predicate fingerprint matched ${predicates.size} methods; expected exactly one"
-        }
-        val predicate = predicates.single().originalMethod
-        val anchorMatches = FeedContentAccessor.matchAll()
-        check(anchorMatches.size == 1) {
-            "Threads feed-wrapper anchor fingerprint matched ${anchorMatches.size} methods; expected exactly one"
-        }
-        val anchor = anchorMatches.single().originalMethod
-        val mediaAccessors = feedWrapperAccessor(anchor, "Lcom/instagram/feed/media/Media;").matchAll()
-        check(mediaAccessors.size == 1) {
-            "Threads feed media accessor fingerprint matched ${mediaAccessors.size} methods; expected exactly one"
-        }
-        val threadAccessors = feedThreadAccessor(anchor).matchAll()
-        check(threadAccessors.size == 1) {
-            "Threads feed ThreadIntf-role accessor fingerprint matched ${threadAccessors.size} methods; expected exactly one"
-        }
-        val threadAccessor = threadAccessors.single().originalMethod
-        val threadItems = threadItemsAccessor(threadAccessor).matchAll()
-        check(threadItems.size == 1) {
-            "Threads thread-items accessor fingerprint matched ${threadItems.size} methods; expected exactly one"
-        }
-        injectFeedAdFilter(
-            method,
-            predicate.name,
-            mediaAccessors.single().originalMethod.name,
-            threadAccessor.name,
-            threadItems.single().originalMethod.name,
-        )
+        val helper = requireSingleFeedMatch("Media ad-predicate helper", MediaAdPredicateHelper.matchAll())
+            .originalMethod
+        val predicate = requireSingleFeedMatch("Media ad-predicate", mediaAdPredicate(helper).matchAll()).originalMethod
+        val anchor = requireSingleFeedMatch("feed-wrapper anchor", FeedContentAccessor.matchAll()).originalMethod
+        val mediaAccessor = requireSingleFeedMatch(
+            "feed media accessor",
+            feedWrapperAccessor(anchor, "Lcom/instagram/feed/media/Media;").matchAll(),
+        ).originalMethod
+        val threadAccessor = requireSingleFeedMatch("feed ThreadIntf-role accessor", feedThreadAccessor(anchor).matchAll())
+            .originalMethod
+        val threadItems = requireSingleFeedMatch("thread-items accessor", threadItemsAccessor(threadAccessor).matchAll())
+            .originalMethod
+        injectFeedAdFilter(method, predicate.name, mediaAccessor.name, threadAccessor.name, threadItems.name)
     }
+}
+
+/** Requires one unique result for every feed ABI fingerprint used by the injection. */
+internal fun <T> requireSingleFeedMatch(label: String, matches: List<T>): T {
+    check(matches.size == 1) { "Threads $label fingerprint matched ${matches.size} methods; expected exactly one" }
+    return matches.single()
 }
 
 /** Injects the production hook; the caller must first validate the target and reflection ABI. */

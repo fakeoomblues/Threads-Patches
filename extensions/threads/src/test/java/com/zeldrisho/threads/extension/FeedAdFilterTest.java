@@ -66,6 +66,14 @@ public class FeedAdFilterTest {
   }
 
   @Test
+  public void resolvedFourArgumentOverloadDelegatesToLegacyThreadItemsLookup() {
+    Object post = new FakeFeedUnit(false);
+    List<?> result = FeedAdFilter.filterAds(Arrays.asList(post), "DED", "A05", "A02");
+    assertEquals(1, result.size());
+    assertSame(post, result.get(0));
+  }
+
+  @Test
   public void patchTimeResolvedThreadItemsAccessorIsUsed() {
     FakeThreadUnit adUnit = new FakeThreadUnit(new FakeThread(new FakeThreadItem(true)));
     FakeThreadUnit post = new FakeThreadUnit(new FakeThread(new FakeThreadItem(false)));

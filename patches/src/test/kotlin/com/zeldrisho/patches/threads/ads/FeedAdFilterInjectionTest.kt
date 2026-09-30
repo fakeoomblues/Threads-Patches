@@ -65,6 +65,18 @@ class FeedAdFilterInjectionTest {
         return instructions.map { it.opcode }
     }
 
+    @Test fun feedFingerprintResultsMustBeUnique() {
+        assertEquals("target", requireSingleFeedMatch("target", listOf("target")))
+        val missing = kotlin.test.assertFailsWith<IllegalStateException> {
+            requireSingleFeedMatch("target", emptyList<String>())
+        }
+        assertEquals("Threads target fingerprint matched 0 methods; expected exactly one", missing.message)
+        val ambiguous = kotlin.test.assertFailsWith<IllegalStateException> {
+            requireSingleFeedMatch("target", listOf("first", "second"))
+        }
+        assertEquals("Threads target fingerprint matched 2 methods; expected exactly one", ambiguous.message)
+    }
+
     @Test fun lowRegisterHookUsesPlainMoves() {
         // registerCount 13 -> listReg 9; v0-v4 are local scratch registers.
         val opcodes = injectedOpcodes(13)
