@@ -67,9 +67,7 @@ class ThreadsFingerprintApkmHarnessTest {
                 val ref = helper.single().originalMethod
                 scan(all, mediaAdPredicate(ref), patchContext)
             } else emptyList()
-            if (version == "434.0.0.41.74") {
-                println("434 Media predicate candidates: " + mediaPredicate.joinToString { "${it.originalMethod.definingClass}->${it.originalMethod.name}()${it.originalMethod.returnType}" })
-            }
+            println("$version Media predicate candidates: " + mediaPredicate.joinToString { "${it.originalMethod.definingClass}->${it.originalMethod.name}()${it.originalMethod.returnType}" })
             val anchors = scan(all, FeedContentAccessor, patchContext)
             val mediaAccessors = if (anchors.size == 1) {
                 scan(all, feedWrapperAccessor(anchors.single().originalMethod, "Lcom/instagram/feed/media/Media;"), patchContext)
@@ -100,7 +98,8 @@ class ThreadsFingerprintApkmHarnessTest {
         assumeTrue("Set THREADS_APKM_434/445/449 or matching system properties to available original APKMs", builds.isNotEmpty())
         val results = builds.associate { (label, version, pair) ->
             label to matchCounts(pair.second, version, pair.first).also { counts ->
-                assertTrue(counts.getValue("thread accessor") == 1, "$label ThreadIntf-role accessor expected 1 match, got ${counts.getValue("thread accessor")}")
+                assertEquals(1, counts.getValue("thread accessor"), "$label ThreadIntf-role accessor")
+                assertEquals(1, counts.getValue("Media predicate"), "$label Media predicate")
             }
         }
         println("fingerprint\\build\t" + results.keys.joinToString("\t"))

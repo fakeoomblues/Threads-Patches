@@ -79,7 +79,7 @@ internal object MediaAdPredicateHelper : Fingerprint(
     },
 )
 
-/** Media no-arg predicate that constructs an argument and invokes the matched helper. */
+/** Media predicate that constructs the helper argument and directly returns its boolean result. */
 internal fun mediaAdPredicate(helper: MethodReference) = Fingerprint(
     definingClass = "Lcom/instagram/feed/media/Media;",
     returnType = "Z",
@@ -87,13 +87,17 @@ internal fun mediaAdPredicate(helper: MethodReference) = Fingerprint(
     custom = { candidate, _ ->
         val method = candidate as com.android.tools.smali.dexlib2.iface.Method
         val instructions = method.getImplementation()?.getInstructions()?.toList().orEmpty()
-        instructions.any { it.opcode == Opcode.NEW_INSTANCE } &&
-            instructions.filterIsInstance<ReferenceInstruction>().any { instruction ->
-                (instruction.reference as? MethodReference)?.let { reference ->
-                    reference.definingClass == helper.definingClass && reference.name == helper.name &&
-                        reference.parameterTypes == helper.parameterTypes && reference.returnType == helper.returnType
-                } == true
-            }
+        val constructsArgument = instructions.any { it.opcode == Opcode.NEW_INSTANCE }
+        val returnsHelperResult = instructions.indices.any { index ->
+            val reference = (instructions[index] as? ReferenceInstruction)?.reference as? MethodReference
+            reference?.let {
+                it.definingClass == helper.definingClass && it.name == helper.name &&
+                    it.parameterTypes == helper.parameterTypes && it.returnType == helper.returnType
+            } == true && index + 2 < instructions.size &&
+                instructions[index + 1].opcode == Opcode.MOVE_RESULT &&
+                instructions[index + 2].opcode == Opcode.RETURN
+        }
+        constructsArgument && returnsHelperResult
     },
 )
 
