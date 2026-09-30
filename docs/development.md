@@ -30,7 +30,7 @@ original split APK → baksmali smali → fingerprint + patch → .mpp → Morph
 Run from the repository root with the [configured toolchain](toolchain.md):
 
 ```bash
-uvx pre-commit run --all-files --show-diff-on-failure
+pre-commit run --all-files --show-diff-on-failure
 python3 -m unittest discover -s scripts/tests -v
 ./gradlew verify --no-daemon
 ```
@@ -68,14 +68,18 @@ build output, and local APK analysis are not formatting targets.
 | Spotless: ktlint + google-java-format | Root `build.gradle.kts`; Kotlin, Gradle scripts, extension Java |
 | detekt | `patches/build.gradle.kts`, `config/detekt/detekt.yml`; Kotlin, without type resolution |
 | Android Lint | Extension production and test sources |
-| Ruff check + format | `.pre-commit-config.yaml`; `scripts/*.py` |
+| Ruff check + format | `.pre-commit-config.yaml` using Homebrew `ruff`; `scripts/*.py` |
 | actionlint | `.pre-commit-config.yaml`; workflows; ShellCheck when on PATH (explicitly installed in CI) |
 | Conflict markers + mixed line endings | `.pre-commit-config.yaml`; tracked text files |
 
 `qualityCheck` aggregates Spotless, detekt, and Android Lint. Reports live in
 `patches/build/reports/detekt/` and `extensions/*/build/reports/`.
-Gradle dependencies and CI action revisions are pinned for reproducible builds;
-CI's uv installation intentionally tracks the latest stable release. Detekt **2.0.0-alpha.6**
+Gradle dependencies and CI action revisions are pinned for reproducible builds.
+CI installs the latest stable Homebrew `pre-commit`, `actionlint`, and `ruff`
+formulae. The local hooks invoke the Homebrew-installed `actionlint` and `ruff`
+directly, so those tool versions track Homebrew's stable versions rather than
+pinned hook revisions. Other hook repositories and revisions remain pinned in
+`.pre-commit-config.yaml`. Detekt **2.0.0-alpha.6**
 remains intentional: its compiler matches Morphe's Kotlin **2.4.10**; stable Detekt
 1.23.8 targets Kotlin 2.0.21 and is not a compatible drop-in. Recheck the
 [compatibility table](https://detekt.dev/docs/introduction/compatibility/) before
@@ -84,19 +88,19 @@ changing either. Use documented rule exceptions, not a baseline of ignored findi
 ### Optional commit hooks
 
 ```bash
-uvx pre-commit install
-uvx pre-commit uninstall # removes only the pre-commit-managed hook
+pre-commit install
+pre-commit uninstall # removes only the pre-commit-managed hook
 ```
 
-The first run needs network access for isolated environments (including Go for
-actionlint). Commits do not run Gradle or SDK builds.
+The first run needs network access to fetch the configured isolated hook
+environments. `actionlint` must be installed separately through Homebrew. Commits
+do not run Gradle or SDK builds.
 
 ### Apply formatting explicitly
 
 ```bash
 ./gradlew spotlessApply --no-daemon
-# Python checks only; these do not rewrite files:
-uvx ruff check scripts && uvx ruff format --check scripts
+# Python checks are included in the pre-commit run above.
 ```
 
 Review the diff and rerun verification. Fix non-autoformattable naming/KDoc errors manually.

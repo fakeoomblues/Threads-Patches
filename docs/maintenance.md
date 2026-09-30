@@ -30,7 +30,7 @@ distinct; retain sanitized results in the release/PR record and raw artifacts ou
 
 ## Outstanding CI validation
 
-CI/release workflow updates enable Gradle caching; CI also caches uv environments.
+CI/release workflow updates enable Gradle caching; CI uses Homebrew to install pre-commit.
 They pass local workflow linting, but the updated workflows have not yet completed
 on GitHub. Check the next hosted run for cache restore/save behavior and expected
 verification results.

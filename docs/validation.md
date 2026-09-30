@@ -16,7 +16,7 @@ mark later steps unexecuted. Do not promote a stable release with required check
 Run the canonical local gates from the repository root:
 
 ```bash
-uvx pre-commit run --all-files --show-diff-on-failure
+pre-commit run --all-files --show-diff-on-failure
 python3 -m unittest discover -s scripts/tests -v
 ./gradlew verify --no-daemon
 ```

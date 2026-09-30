@@ -2,7 +2,7 @@
 
 ## Toolchain
 - Use the checked-in Gradle wrapper (`./gradlew`) with Java 21; setup and registry credentials: `docs/toolchain.md`.
-- Use `uvx` for Python tools; do not repeat host provisioning during routine builds.
+- Use `uvx` for on-demand Python tools and system `pre-commit` for repository hooks; see `docs/toolchain.md` for toolchain setup.
 - Use `android` (from `android-cli`) for SDK management, Android documentation lookup, and supported deployment/UI workflows.
 - Reserve `adb` for lower-level device operations not exposed by `android`; see `docs/toolchain.md` and `docs/validation.md`.
 
@@ -11,7 +11,7 @@
 | ---- | ------- |
 | Inspect Android environment and devices | `android info` |
 | Discover Android CLI capabilities | `android --help` |
-| Check selected files (Markdown, scripts, workflows) | `uvx pre-commit run --files <file> --show-diff-on-failure` |
+| Check selected files (Markdown, scripts, workflows) | `pre-commit run --files <file> --show-diff-on-failure` |
 | Test Python script file | `python3 -m unittest discover -s scripts/tests -p 'test_<script>.py' -v` |
 | Test patch class | `./gradlew :patches:test --tests '<fully.qualified.Class>' --no-daemon` |
 | Test Threads extension class | `./gradlew :extensions:threads:testDebugUnitTest --tests '<fully.qualified.Class>' --no-daemon` |

@@ -23,11 +23,15 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@e99025eb970cfa124b8284a35463d87426917478 # 2026.09.28.1
         with:
-          enable-cache: true
+          stable: true
 
-      - run: uvx pre-commit run --all-files --show-diff-on-failure
+      - name: Install lint tools
+        run: brew install pre-commit actionlint ruff
+
+      - run: pre-commit run --all-files --show-diff-on-failure
       - run: python3 -m unittest discover -s scripts/tests -v
 
   build:
@@ -38,26 +42,32 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@e99025eb970cfa124b8284a35463d87426917478 # 2026.09.28.1
         with:
-          distribution: temurin
-          java-version: 21
+          stable: true
+
+      - name: Install build tools
+        run: |
+          brew install openjdk@21
+          brew install --cask android-cli
+          echo "$(brew --prefix openjdk@21)/bin" >> "$GITHUB_PATH"
+          echo "ANDROID_HOME=$HOME/Android/Sdk" >> "$GITHUB_ENV"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/Android/Sdk/platform-tools
+            ~/Android/Sdk/build-tools
+          key: ${{ runner.os }}-android-sdk-platform-tools-build-tools-${{ hashFiles('settings.gradle.kts', 'gradle/libs.versions.toml') }}
+
+      - name: Install Android platform tools
+        run: android --sdk="$ANDROID_HOME" sdk install platform-tools
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           cache-provider: basic
-
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: |
-            /usr/local/lib/android/sdk/platform-tools
-            /usr/local/lib/android/sdk/build-tools
-          key: ${{ runner.os }}-android-sdk-platform-tools-build-tools-${{ hashFiles('settings.gradle.kts', 'gradle/libs.versions.toml') }}
-
-      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
-        with:
-          packages: platform-tools
 
       - name: Gradle verify
         env:

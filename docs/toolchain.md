@@ -1,33 +1,31 @@
-# Toolchain setup (Fedora WSL, fish)
+# Toolchain setup
 
-Provision once per host, not on every build. Run `fish` blocks in fish and `bash`
-blocks in bash. For routine work, use [development verification](development.md#verify).
+For routine work, use [development verification](development.md#verify).
 
 ## 1. Host tools
 
-Fedora WSL includes Python and the shell tools. Install the additional commands
-used by repo development/release workflows:
+Install Homebrew by following [brew.sh](https://brew.sh). Repository development
+and Android/Java tools are managed with Brew:
 
-```fish
-sudo dnf install -y uv git gh jq fish ripgrep unzip binutils
-```
-
-Install Homebrew by following [brew.sh](https://brew.sh), then install Java and
-APK analysis/Android SDK tools:
-
-```fish
-brew install openjdk@21 android-cli
+```sh
+brew install uv pre-commit jq ripgrep ruff actionlint openjdk@21
+brew install --cask android-cli
 brew unlink openjdk
 brew link openjdk@21
 ```
 
+`uv` is required by the documented toolchain for on-demand Python analysis tools
+such as APKiD and objection. Java and Android SDK tooling support repository
+builds and device workflows.
+
 ## 2. Java, Android CLI, and analysis tools
 
 Use **Java 21** and the checked-in `./gradlew`; no separate Gradle install.
-Set this in `~/.config/fish/config.fish`:
+Set `ANDROID_HOME` to `$HOME/Android/Sdk` in your shell's environment using its
+normal configuration mechanism, or export it for the current session:
 
-```fish
-set -gx ANDROID_HOME "$HOME/Android/Sdk"
+```sh
+export ANDROID_HOME="$HOME/Android/Sdk"
 ```
 
 ### SDK packages: build requirements versus analysis utilities
@@ -42,18 +40,20 @@ with `android sdk list --all 'ndk/*'`, then install the desired exact ID. Build
 Tools IDs also include a version; don't install one manually here because AGP
 selects and downloads its compatible Build-Tools version.
 
-```fish
+```sh
 android info
 android sdk list
 android sdk install platform-tools
 # Optional: select a stable package ID from `android sdk list --all 'ndk/*'`:
 android sdk install "ndk;29.0.14206865"
 android sdk list
-fish_add_path ~/.local/bin ~/Android/Sdk/platform-tools
-# After a Gradle build installs Build-Tools:
-fish_add_path (find ~/Android/Sdk/build-tools -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)
-# Optional: add the NDK compiler tools only when doing native-code analysis:
-fish_add_path ~/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/linux-x86_64/bin
+# Add these directories to PATH using your shell's normal mechanism:
+#   $HOME/.local/bin
+#   $HOME/Android/Sdk/platform-tools
+# After a Gradle build installs Build-Tools, add the selected version's directory:
+find "$HOME/Android/Sdk/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1
+# Optional NDK compiler tools directory for native-code analysis:
+echo "$HOME/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/linux-x86_64/bin"
 ```
 
 Morphe sets `compileSdk = 36`; AGP chooses and installs its compatible build-tools
@@ -78,12 +78,15 @@ of the maintained toolchain; use `rg` for repository searches.
 
 | Tool | Command | Use |
 | --- | --- | --- |
-| Frida | `uv tool install frida-tools` (optional) | Runtime instrumentation; install only when needed |
-| APKiD | `uvx apkid app.apk` | On-demand recon |
-| objection | `uvx objection --help` | On-demand dynamic triage; never assume a persistent install |
+| Frida | `uv tool install frida-tools` (optional; requires uv) | Runtime instrumentation; install only when needed |
+| APKiD | `uvx apkid app.apk` (requires uv) | On-demand recon |
+| objection | `uvx objection --help` (requires uv) | On-demand dynamic triage; never assume a persistent install |
 
-`uv tool` puts isolated executables in `~/.local/bin`; `uvx` uses cached temporary
-environments. Install Frida tooling only for runtime instrumentation, with a
+`uv` is required for the documented Python analysis tools, though not for the
+Gradle build itself. `uv tool` puts isolated executables in `~/.local/bin`; `uvx`
+uses cached temporary environments. Ruff and actionlint are Brew-installed tools;
+Ruff is run directly, while actionlint is invoked by its local pre-commit hook.
+Install Frida tooling only for runtime instrumentation, with a
 matching-version/ABI `frida-server` **on the device**:
 [releases](https://github.com/frida/frida/releases), [Android setup](https://frida.re/docs/android/).
 Use `scripts/extract_smali.py` with baksmali for canonical smali output; `rg` and
@@ -93,7 +96,7 @@ Use `scripts/extract_smali.py` with baksmali for canonical smali output; `rg` an
 
 Wireless ADB avoids USB passthrough:
 
-```fish
+```sh
 adb pair DEVICE_IP:PAIRING_PORT
 adb connect DEVICE_IP:DEBUG_PORT
 adb devices
@@ -154,8 +157,7 @@ Upstream: [README](https://github.com/MorpheApp/morphe-desktop),
 
 ## 6. Storage and path conventions
 
-On the standard Fedora WSL host, APKMirror downloads live in
-`/mnt/c/Users/zeldrisho/Downloads/`; other hosts may use any local directory.
+APKMirror downloads may live in any local directory.
 Keep APK investigation artifacts in the gitignored [analysis workspace](reverse-engineering.md#analysis-workspace).
 The helper prefers the repository's persistent `Morphe.keystore`, with shared
 Morphe data-directory keys as fallbacks; see [signing](cli.md#signing).
@@ -175,7 +177,7 @@ configuration; the bundle contract checks resulting DEX descriptors and flags.
 
 ## Verify setup
 
-```fish
+```sh
 python3 --version
 java -version
 ./gradlew --version

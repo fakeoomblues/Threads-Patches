@@ -43,7 +43,7 @@ Cleanup removes the whole directory, including notes and runs.
 ## Tools
 
 See [toolchain setup](toolchain.md) for the complete inventory and install
-commands, including fish PATH setup and the `uv tool` versus `uvx` decision.
+commands, including PATH setup and optional `uv tool` versus `uvx` usage.
 The Morphe CLI applies `.mpp` bundles; `scripts/repatch.py` finds the Morphe
 JAR in its standard locations with no setup.
 
