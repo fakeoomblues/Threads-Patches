@@ -15,8 +15,6 @@ internal data class FeedReflectionMember(val owner: String, val name: String, va
  */
 internal val feedReflectionMembers434 = listOf(
     FeedReflectionMember("LX/1qQ;", "DED", "Z"),
-    FeedReflectionMember("LX/3oS;", "A05", "Lcom/instagram/feed/media/Media;"),
-    FeedReflectionMember("LX/3oS;", "A02", "Lcom/instagram/barcelona/model/ThreadIntf;"),
     FeedReflectionMember("Lcom/instagram/barcelona/model/ThreadIntf;", "Ckh", "Ljava/util/List;"),
     FeedReflectionMember("Lcom/instagram/api/schemas/ThreadItemIntf;", "CDh", "Lcom/instagram/feed/media/Media;"),
 )
@@ -37,8 +35,6 @@ internal val feedReflectionMembers434 = listOf(
  */
 internal val feedReflectionMembers445 = listOf(
     FeedReflectionMember("LX/2xO;", "DGK", "Z"),
-    FeedReflectionMember("LX/0hJ;", "A05", "Lcom/instagram/feed/media/Media;"),
-    FeedReflectionMember("LX/0hJ;", "A02", "Lcom/instagram/api/schemas/ThreadIntf;"),
     FeedReflectionMember("Lcom/instagram/api/schemas/ThreadIntf;", "Cnd", "Ljava/util/List;"),
     FeedReflectionMember("Lcom/instagram/api/schemas/ThreadItemIntf;", "CIV", "Lcom/instagram/feed/media/Media;"),
 )

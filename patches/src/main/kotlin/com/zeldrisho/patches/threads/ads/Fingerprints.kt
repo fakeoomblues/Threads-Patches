@@ -2,6 +2,7 @@ package com.zeldrisho.patches.threads.ads
 
 import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.methodCall
+import app.morphe.patcher.string
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.WideLiteralInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
@@ -92,5 +93,43 @@ internal fun mediaAdPredicate(helper: MethodReference) = Fingerprint(
                         reference.parameterTypes == helper.parameterTypes && reference.returnType == helper.returnType
                 } == true
             }
+    },
+)
+
+/** Feed-wrapper's feedContent accessor uniquely anchors the wrapper class. */
+internal object FeedContentAccessor : Fingerprint(
+    returnType = "L",
+    parameters = emptyList(),
+    filters = listOf(string("feedContent")),
+)
+
+/** Finds a wrapper accessor in the class owning the matched feedContent accessor. */
+internal fun feedWrapperAccessor(anchor: MethodReference, returnType: String) = Fingerprint(
+    definingClass = anchor.definingClass,
+    returnType = returnType,
+    parameters = emptyList(),
+    custom = { candidate, _ ->
+        val method = candidate as com.android.tools.smali.dexlib2.iface.Method
+        val instructions = method.getImplementation()?.getInstructions()?.toList().orEmpty()
+        val callsAnchor = instructions.filterIsInstance<ReferenceInstruction>().any { instruction ->
+            (instruction.reference as? MethodReference)?.let { reference ->
+                reference.definingClass == anchor.definingClass && reference.name == anchor.name &&
+                    reference.parameterTypes == anchor.parameterTypes && reference.returnType == anchor.returnType
+            } == true
+        }
+        val semanticShape = if (returnType == "Lcom/instagram/api/schemas/ThreadIntf;") {
+            instructions.any { it.opcode == Opcode.CHECK_CAST } &&
+                instructions.filterIsInstance<ReferenceInstruction>().any { instruction ->
+                    (instruction.reference as? com.android.tools.smali.dexlib2.iface.reference.FieldReference)
+                        ?.type == returnType
+                }
+        } else {
+            instructions.any { it.opcode == Opcode.INSTANCE_OF } &&
+                instructions.filterIsInstance<ReferenceInstruction>().any { instruction ->
+                    instruction.opcode == Opcode.INVOKE_INTERFACE &&
+                        (instruction.reference as? MethodReference)?.returnType == returnType
+                }
+        }
+        callsAnchor && semanticShape
     },
 )

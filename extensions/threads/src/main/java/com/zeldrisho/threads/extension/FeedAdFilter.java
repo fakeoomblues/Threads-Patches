@@ -60,11 +60,12 @@ public final class FeedAdFilter {
    * ThreadIntf.Ckh()/Cnd() -> ThreadItem.CDh()/CIV() -> Media.DED()/DGK()}).
    */
   public static List<?> filterAds(List<?> items) {
-    return filterAds(items, null);
+    return filterAds(items, null, null, null);
   }
 
-  /** Patch-time-resolved Media ad predicate; null uses the legacy names as a warned fallback. */
-  public static List<?> filterAds(List<?> items, String mediaPredicateName) {
+  /** Patch-time-resolved member names; null values use legacy names as a warned fallback. */
+  public static List<?> filterAds(
+      List<?> items, String mediaPredicateName, String mediaAccessorName, String threadAccessorName) {
     if (items == null || items.isEmpty()) {
       return items;
     }
@@ -76,7 +77,7 @@ public final class FeedAdFilter {
       int index = 0;
       while (iterator.hasNext()) {
         Object item = iterator.next();
-        if (isAdUnit(item, mediaPredicateName)) {
+        if (isAdUnit(item, mediaPredicateName, mediaAccessorName, threadAccessorName)) {
           if (out == null) {
             out = new ArrayList<>(items.size() - 1);
             Iterator<?> prefixIterator = items.iterator();
@@ -103,7 +104,8 @@ public final class FeedAdFilter {
    * @param item The feed unit object to inspect.
    * @return True if the item is determined to be an ad, false otherwise or on reflection failure.
    */
-  private static boolean isAdUnit(Object item, String mediaPredicateName) {
+  private static boolean isAdUnit(
+      Object item, String mediaPredicateName, String mediaAccessorName, String threadAccessorName) {
     try {
       // 1) Direct DED()/DGK() (X/1qQ ad headers on 434, X/2xO on 445 carry their own flag).
       if (callDed(item)) {
@@ -111,13 +113,13 @@ public final class FeedAdFilter {
       }
       // 2) Media-bearing feed unit: LX/3oS (434) / LX/0hJ (445) .A05() -> Media;
       //    Media.DED() (434) / DGK() (445) is the ad flag.
-      Object media = call(item, "A05");
+      Object media = call(item, fallbackName(mediaAccessorName, "A05"));
       if (media != null && callMediaPredicate(media, mediaPredicateName)) {
         return true;
       }
       // 3) Thread-carried ad: .A02() -> ThreadIntf; items (Ckh/Cnd) -> ThreadItem
       //    (CDh/CIV) -> Media.DED()/DGK().
-      Object thread = call(item, "A02");
+      Object thread = call(item, fallbackName(threadAccessorName, "A02"));
       if (thread != null) {
         Object threadItems = callAny(thread, "Cnd", "Ckh");
         if (threadItems instanceof List) {
@@ -145,16 +147,18 @@ public final class FeedAdFilter {
     return o != null && Boolean.TRUE.equals(callAny(o, "DGK", "DED"));
   }
 
-  private static boolean callMediaPredicate(Object o, String resolvedName) {
-    if (o == null) return false;
-    if (resolvedName != null && !resolvedName.isEmpty()) {
-      return Boolean.TRUE.equals(callAny(o, resolvedName));
-    }
+  private static String fallbackName(String resolvedName, String legacyName) {
+    if (resolvedName != null && !resolvedName.isEmpty()) return resolvedName;
+    logFallbackWarning();
+    return legacyName;
+  }
+
+  private static void logFallbackWarning() {
     if (!fallbackWarningLogged) {
       synchronized (FeedAdFilter.class) {
         if (!fallbackWarningLogged) {
           try {
-            Log.w(TAG, "Patch-time Media predicate unavailable; falling back to legacy DED/DGK names");
+            Log.w(TAG, "Patch-time feed member resolution unavailable; falling back to legacy names");
           } catch (Throwable ignored) {
             // Android logging is absent in the plain JVM extension tests.
           }
@@ -162,6 +166,14 @@ public final class FeedAdFilter {
         }
       }
     }
+  }
+
+  private static boolean callMediaPredicate(Object o, String resolvedName) {
+    if (o == null) return false;
+    if (resolvedName != null && !resolvedName.isEmpty()) {
+      return Boolean.TRUE.equals(callAny(o, resolvedName));
+    }
+    logFallbackWarning();
     return Boolean.TRUE.equals(callAny(o, "DGK", "DED"));
   }
 

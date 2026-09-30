@@ -59,12 +59,30 @@ val hideAdsPatch = bytecodePatch(
             "Threads Media ad-predicate fingerprint matched ${predicates.size} methods; expected exactly one"
         }
         val predicate = predicates.single().originalMethod
-        injectFeedAdFilter(method, predicate.name)
+        val anchorMatches = FeedContentAccessor.matchAll()
+        check(anchorMatches.size == 1) {
+            "Threads feed-wrapper anchor fingerprint matched ${anchorMatches.size} methods; expected exactly one"
+        }
+        val anchor = anchorMatches.single().originalMethod
+        val mediaAccessors = feedWrapperAccessor(anchor, "Lcom/instagram/feed/media/Media;").matchAll()
+        check(mediaAccessors.size == 1) {
+            "Threads feed media accessor fingerprint matched ${mediaAccessors.size} methods; expected exactly one"
+        }
+        val threadAccessors = feedWrapperAccessor(anchor, "Lcom/instagram/api/schemas/ThreadIntf;").matchAll()
+        check(threadAccessors.size == 1) {
+            "Threads feed thread accessor fingerprint matched ${threadAccessors.size} methods; expected exactly one"
+        }
+        injectFeedAdFilter(method, predicate.name, mediaAccessors.single().originalMethod.name, threadAccessors.single().originalMethod.name)
     }
 }
 
 /** Injects the production hook; the caller must first validate the target and reflection ABI. */
-internal fun injectFeedAdFilter(method: MutableMethod, mediaPredicateName: String = "") {
+internal fun injectFeedAdFilter(
+    method: MutableMethod,
+    mediaPredicateName: String = "",
+    mediaAccessorName: String = "",
+    threadAccessorName: String = "",
+) {
     val impl = method.implementation
         ?: error("BarcelonaFeedCache merge method has no implementation")
     // A0F (434) / A0G (445): (this, LX/obf, Integer, String, String, List, LX/obf, Function3, Z):
@@ -77,7 +95,9 @@ internal fun injectFeedAdFilter(method: MutableMethod, mediaPredicateName: Strin
         """
             $loadMove
             const-string v1, "$mediaPredicateName"
-            invoke-static {v0, v1}, Lcom/zeldrisho/threads/extension/FeedAdFilter;->filterAds(Ljava/util/List;Ljava/lang/String;)Ljava/util/List;
+            const-string v2, "$mediaAccessorName"
+            const-string v3, "$threadAccessorName"
+            invoke-static {v0, v1, v2, v3}, Lcom/zeldrisho/threads/extension/FeedAdFilter;->filterAds(Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;
             move-result-object v0
             $storeMove
         """,
