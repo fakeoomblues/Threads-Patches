@@ -65,6 +65,15 @@ public class FeedAdFilterTest {
     assertSame(post, out.get(0));
   }
 
+  @Test
+  public void patchTimeResolvedThreadItemsAccessorIsUsed() {
+    FakeThreadUnit adUnit = new FakeThreadUnit(new FakeThread(new FakeThreadItem(true)));
+    FakeThreadUnit post = new FakeThreadUnit(new FakeThread(new FakeThreadItem(false)));
+    List<?> out = FeedAdFilter.filterAds(Arrays.asList(adUnit, post), "DED", "A05", "A02", "Ckh");
+    assertEquals(1, out.size());
+    assertSame(post, out.get(0));
+  }
+
   /** Thread units with any ad item in their Ckh()->CDh()->DED() chain must be filtered out. */
   @Test
   public void threadCarriedAdRemoved() {

@@ -72,7 +72,18 @@ val hideAdsPatch = bytecodePatch(
         check(threadAccessors.size == 1) {
             "Threads feed ThreadIntf-role accessor fingerprint matched ${threadAccessors.size} methods; expected exactly one"
         }
-        injectFeedAdFilter(method, predicate.name, mediaAccessors.single().originalMethod.name, threadAccessors.single().originalMethod.name)
+        val threadAccessor = threadAccessors.single().originalMethod
+        val threadItems = threadItemsAccessor(threadAccessor).matchAll()
+        check(threadItems.size == 1) {
+            "Threads thread-items accessor fingerprint matched ${threadItems.size} methods; expected exactly one"
+        }
+        injectFeedAdFilter(
+            method,
+            predicate.name,
+            mediaAccessors.single().originalMethod.name,
+            threadAccessor.name,
+            threadItems.single().originalMethod.name,
+        )
     }
 }
 
@@ -82,6 +93,7 @@ internal fun injectFeedAdFilter(
     mediaPredicateName: String = "",
     mediaAccessorName: String = "",
     threadAccessorName: String = "",
+    threadItemsAccessorName: String = "",
 ) {
     val impl = method.implementation
         ?: error("BarcelonaFeedCache merge method has no implementation")
@@ -97,7 +109,8 @@ internal fun injectFeedAdFilter(
             const-string v1, "$mediaPredicateName"
             const-string v2, "$mediaAccessorName"
             const-string v3, "$threadAccessorName"
-            invoke-static {v0, v1, v2, v3}, Lcom/zeldrisho/threads/extension/FeedAdFilter;->filterAds(Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;
+            const-string v4, "$threadItemsAccessorName"
+            invoke-static {v0, v1, v2, v3, v4}, Lcom/zeldrisho/threads/extension/FeedAdFilter;->filterAds(Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;
             move-result-object v0
             $storeMove
         """,

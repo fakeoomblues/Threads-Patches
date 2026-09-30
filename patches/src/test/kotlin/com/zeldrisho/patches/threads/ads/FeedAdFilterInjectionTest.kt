@@ -60,17 +60,18 @@ class FeedAdFilterInjectionTest {
         val method = targetMethod(registerCount)
         injectFeedAdFilter(method)
         val instructions = method.implementation!!.instructions
-        assertEquals(8, instructions.size, "hook adds 7 instructions before the original NOP")
-        assertEquals(Opcode.NOP, instructions[7].opcode, "original body is preserved after the hook")
+        assertEquals(9, instructions.size, "hook adds 8 instructions before the original NOP")
+        assertEquals(Opcode.NOP, instructions[8].opcode, "original body is preserved after the hook")
         return instructions.map { it.opcode }
     }
 
     @Test fun lowRegisterHookUsesPlainMoves() {
-        // registerCount 13 -> listReg 9; v0-v3 are local scratch registers.
+        // registerCount 13 -> listReg 9; v0-v4 are local scratch registers.
         val opcodes = injectedOpcodes(13)
         assertEquals(
             listOf(
                 Opcode.MOVE_OBJECT,
+                Opcode.CONST_STRING,
                 Opcode.CONST_STRING,
                 Opcode.CONST_STRING,
                 Opcode.CONST_STRING,
@@ -87,7 +88,7 @@ class FeedAdFilterInjectionTest {
         val load = instructions[0] as TwoRegisterInstruction
         assertEquals(0, load.registerA)
         assertEquals(9, load.registerB)
-        val store = instructions[6] as TwoRegisterInstruction
+        val store = instructions[7] as TwoRegisterInstruction
         assertEquals(9, store.registerA)
         assertEquals(0, store.registerB)
     }
@@ -98,6 +99,7 @@ class FeedAdFilterInjectionTest {
         assertEquals(
             listOf(
                 Opcode.MOVE_OBJECT_FROM16,
+                Opcode.CONST_STRING,
                 Opcode.CONST_STRING,
                 Opcode.CONST_STRING,
                 Opcode.CONST_STRING,
@@ -114,7 +116,7 @@ class FeedAdFilterInjectionTest {
         // registerCount 260 -> listReg 256: from16 cannot address the store destination.
         val opcodes = injectedOpcodes(260)
         assertEquals(Opcode.MOVE_OBJECT_FROM16, opcodes[0])
-        assertEquals(Opcode.MOVE_OBJECT_16, opcodes[6])
+        assertEquals(Opcode.MOVE_OBJECT_16, opcodes[7])
     }
 
     /** Verifies that feed-filter injection rejects methods without a bytecode implementation. */
@@ -129,21 +131,22 @@ class FeedAdFilterInjectionTest {
         val method = targetMethod(46)
         injectFeedAdFilter(method)
         val instructions = method.implementation!!.instructions
-        val invoke = instructions[4] as FiveRegisterInstruction
+        val invoke = instructions[5] as FiveRegisterInstruction
         val target = (invoke as ReferenceInstruction).reference as MethodReference
         assertEquals("Lcom/zeldrisho/threads/extension/FeedAdFilter;", target.definingClass)
         assertEquals("filterAds", target.name)
         assertEquals(
-            listOf("Ljava/util/List;", "Ljava/lang/String;", "Ljava/lang/String;", "Ljava/lang/String;"),
+            listOf("Ljava/util/List;", "Ljava/lang/String;", "Ljava/lang/String;", "Ljava/lang/String;", "Ljava/lang/String;"),
             target.parameterTypes.map { it.toString() },
         )
         assertEquals("Ljava/util/List;", target.returnType)
         assertEquals(0, invoke.registerC, "invoke must consume the scratch register")
-        assertEquals(4, invoke.registerCount)
+        assertEquals(5, invoke.registerCount)
         assertEquals(1, invoke.registerD, "invoke must consume the predicate name")
         assertEquals(2, invoke.registerE, "invoke must consume the media accessor name")
         assertEquals(3, invoke.registerF, "invoke must consume the thread accessor name")
-        val moveResult = instructions[5]
+        assertEquals(4, invoke.registerG, "invoke must consume the thread-items accessor name")
+        val moveResult = instructions[6]
         assertEquals(Opcode.MOVE_RESULT_OBJECT, moveResult.opcode)
     }
 }

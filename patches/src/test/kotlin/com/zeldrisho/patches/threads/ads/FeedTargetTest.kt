@@ -119,6 +119,29 @@ class FeedTargetTest {
         }
     }
 
+    @Test fun threadItemsFingerprintRequiresExactlyOneAbstractListGetter() {
+        val owner = "Lcom/instagram/api/schemas/ThreadIntf;"
+        val getter = ImmutableMethod(
+            owner, "renamed", emptyList(), "Ljava/util/List;",
+            AccessFlags.PUBLIC.value or AccessFlags.ABSTRACT.value, emptySet(), emptySet(), null,
+        )
+        val threadAccessor = ImmutableMethodReference("LFeed;", "A02", emptyList(), owner)
+        with(context()) {
+            assertEquals(
+                "renamed",
+                threadItemsAccessor(threadAccessor)
+                    .matchAll(classDef(owner, listOf(getter)), 1..1).single().originalMethod.name,
+            )
+            val duplicate = ImmutableMethod(
+                owner, "other", emptyList(), "Ljava/util/List;",
+                AccessFlags.PUBLIC.value or AccessFlags.ABSTRACT.value, emptySet(), emptySet(), null,
+            )
+            assertFailsWith<app.morphe.patcher.patch.PatchException> {
+                threadItemsAccessor(threadAccessor).matchAll(classDef(owner, listOf(getter, duplicate)), 1..1)
+            }
+        }
+    }
+
     /** Builds class fixtures for a reflection member set, optionally transforming methods. */
     private fun reflectionClasses(
         members: List<FeedReflectionMember> = feedReflectionMembers,

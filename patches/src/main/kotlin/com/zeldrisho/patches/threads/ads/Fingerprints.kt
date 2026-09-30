@@ -130,6 +130,19 @@ internal fun feedThreadAccessor(anchor: MethodReference) = Fingerprint(
     },
 )
 
+/** Resolves the unique abstract List getter on the resolved ThreadIntf interface. */
+internal fun threadItemsAccessor(threadAccessor: MethodReference) = Fingerprint(
+    definingClass = threadAccessor.returnType,
+    returnType = "Ljava/util/List;",
+    parameters = emptyList(),
+    custom = { candidate, _ ->
+        val method = candidate as com.android.tools.smali.dexlib2.iface.Method
+        AccessFlags.PUBLIC.isSet(method.accessFlags) &&
+            AccessFlags.ABSTRACT.isSet(method.accessFlags) &&
+            !AccessFlags.STATIC.isSet(method.accessFlags)
+    },
+)
+
 /** Finds a wrapper accessor in the class owning the matched feedContent accessor. */
 internal fun feedWrapperAccessor(anchor: MethodReference, returnType: String) = Fingerprint(
     definingClass = anchor.definingClass,

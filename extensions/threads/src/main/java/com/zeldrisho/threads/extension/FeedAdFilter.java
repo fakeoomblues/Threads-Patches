@@ -60,12 +60,22 @@ public final class FeedAdFilter {
    * ThreadIntf.Ckh()/Cnd() -> ThreadItem.CDh()/CIV() -> Media.DED()/DGK()}).
    */
   public static List<?> filterAds(List<?> items) {
-    return filterAds(items, null, null, null);
+    return filterAds(items, null, null, null, null);
   }
 
   /** Patch-time-resolved member names; null values use legacy names as a warned fallback. */
   public static List<?> filterAds(
       List<?> items, String mediaPredicateName, String mediaAccessorName, String threadAccessorName) {
+    return filterAds(items, mediaPredicateName, mediaAccessorName, threadAccessorName, null);
+  }
+
+  /** Patch-time-resolved names; null values use legacy names as a warned fallback. */
+  public static List<?> filterAds(
+      List<?> items,
+      String mediaPredicateName,
+      String mediaAccessorName,
+      String threadAccessorName,
+      String threadItemsAccessorName) {
     if (items == null || items.isEmpty()) {
       return items;
     }
@@ -77,7 +87,7 @@ public final class FeedAdFilter {
       int index = 0;
       while (iterator.hasNext()) {
         Object item = iterator.next();
-        if (isAdUnit(item, mediaPredicateName, mediaAccessorName, threadAccessorName)) {
+        if (isAdUnit(item, mediaPredicateName, mediaAccessorName, threadAccessorName, threadItemsAccessorName)) {
           if (out == null) {
             out = new ArrayList<>(items.size() - 1);
             Iterator<?> prefixIterator = items.iterator();
@@ -105,7 +115,11 @@ public final class FeedAdFilter {
    * @return True if the item is determined to be an ad, false otherwise or on reflection failure.
    */
   private static boolean isAdUnit(
-      Object item, String mediaPredicateName, String mediaAccessorName, String threadAccessorName) {
+      Object item,
+      String mediaPredicateName,
+      String mediaAccessorName,
+      String threadAccessorName,
+      String threadItemsAccessorName) {
     try {
       // 1) Direct DED()/DGK() (X/1qQ ad headers on 434, X/2xO on 445 carry their own flag).
       if (callDed(item)) {
@@ -121,7 +135,13 @@ public final class FeedAdFilter {
       //    (CDh/CIV) -> Media.DED()/DGK().
       Object thread = call(item, fallbackName(threadAccessorName, "A02"));
       if (thread != null) {
-        Object threadItems = callAny(thread, "Cnd", "Ckh");
+        Object threadItems;
+        if (threadItemsAccessorName != null && !threadItemsAccessorName.isEmpty()) {
+          threadItems = call(thread, threadItemsAccessorName);
+        } else {
+          logFallbackWarning();
+          threadItems = callAny(thread, "Cr9", "Cnd", "Ckh");
+        }
         if (threadItems instanceof List) {
           for (Object ti : (List<?>) threadItems) {
             if (ti != null && (callDed(ti) || callMediaPredicate(callAny(ti, "CIV", "CDh"), mediaPredicateName))) {

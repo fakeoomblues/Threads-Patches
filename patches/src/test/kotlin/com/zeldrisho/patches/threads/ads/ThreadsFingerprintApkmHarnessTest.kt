@@ -75,12 +75,16 @@ class ThreadsFingerprintApkmHarnessTest {
             val threadAccessors = if (anchors.size == 1) {
                 scan(all, feedThreadAccessor(anchors.single().originalMethod), patchContext)
             } else emptyList()
+            val threadItemsAccessors = if (threadAccessors.size == 1) {
+                scan(all, threadItemsAccessor(threadAccessors.single().originalMethod), patchContext)
+            } else emptyList()
             return linkedMapOf(
                 "helper" to helper.size,
                 "Media predicate" to mediaPredicate.size,
                 "feedContent anchor" to anchors.size,
                 "Media accessor" to mediaAccessors.size,
                 "thread accessor" to threadAccessors.size,
+                "thread-items accessor" to threadItemsAccessors.size,
             )
         }
     }
@@ -100,10 +104,11 @@ class ThreadsFingerprintApkmHarnessTest {
             label to matchCounts(pair.second, version, pair.first).also { counts ->
                 assertEquals(1, counts.getValue("thread accessor"), "$label ThreadIntf-role accessor")
                 assertEquals(1, counts.getValue("Media predicate"), "$label Media predicate")
+                assertEquals(1, counts.getValue("thread-items accessor"), "$label thread-items accessor")
             }
         }
         println("fingerprint\\build\t" + results.keys.joinToString("\t"))
-        listOf("helper", "Media predicate", "feedContent anchor", "Media accessor", "thread accessor").forEach { fingerprint ->
+        listOf("helper", "Media predicate", "feedContent anchor", "Media accessor", "thread accessor", "thread-items accessor").forEach { fingerprint ->
             println(fingerprint + "\t" + results.values.joinToString("\t") { it.getValue(fingerprint).toString() })
         }
     }
