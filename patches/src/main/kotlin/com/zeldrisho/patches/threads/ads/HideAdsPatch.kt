@@ -68,9 +68,9 @@ val hideAdsPatch = bytecodePatch(
         check(mediaAccessors.size == 1) {
             "Threads feed media accessor fingerprint matched ${mediaAccessors.size} methods; expected exactly one"
         }
-        val threadAccessors = feedWrapperAccessor(anchor, "Lcom/instagram/api/schemas/ThreadIntf;").matchAll()
+        val threadAccessors = feedThreadAccessor(anchor).matchAll()
         check(threadAccessors.size == 1) {
-            "Threads feed thread accessor fingerprint matched ${threadAccessors.size} methods; expected exactly one"
+            "Threads feed ThreadIntf-role accessor fingerprint matched ${threadAccessors.size} methods; expected exactly one"
         }
         injectFeedAdFilter(method, predicate.name, mediaAccessors.single().originalMethod.name, threadAccessors.single().originalMethod.name)
     }

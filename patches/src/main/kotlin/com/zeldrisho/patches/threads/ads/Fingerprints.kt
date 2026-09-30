@@ -5,6 +5,7 @@ import app.morphe.patcher.methodCall
 import app.morphe.patcher.string
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.WideLiteralInstruction
+import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
@@ -101,6 +102,28 @@ internal object FeedContentAccessor : Fingerprint(
     returnType = "L",
     parameters = emptyList(),
     filters = listOf(string("feedContent")),
+)
+
+/** Matches the feed wrapper's thread getter by its return type's stable simple role. */
+internal fun feedThreadAccessor(anchor: MethodReference) = Fingerprint(
+    definingClass = anchor.definingClass,
+    returnType = "L",
+    parameters = emptyList(),
+    custom = { candidate, _ ->
+        val method = candidate as com.android.tools.smali.dexlib2.iface.Method
+        val instructions = method.getImplementation()?.getInstructions()?.toList().orEmpty()
+        val callsAnchor = instructions.filterIsInstance<ReferenceInstruction>().any { instruction ->
+            (instruction.reference as? MethodReference)?.let { reference ->
+                reference.definingClass == anchor.definingClass && reference.name == anchor.name &&
+                    reference.parameterTypes == anchor.parameterTypes && reference.returnType == anchor.returnType
+            } == true
+        }
+        val castsThreadIntf = instructions.any { it.opcode == Opcode.CHECK_CAST } &&
+            instructions.filterIsInstance<ReferenceInstruction>().any { instruction ->
+                (instruction.reference as? FieldReference)?.type?.endsWith("/ThreadIntf;") == true
+            }
+        callsAnchor && castsThreadIntf
+    },
 )
 
 /** Finds a wrapper accessor in the class owning the matched feedContent accessor. */
