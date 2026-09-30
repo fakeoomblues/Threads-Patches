@@ -1,5 +1,6 @@
 package com.zeldrisho.threads.extension;
 
+import android.util.Log;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +40,8 @@ public final class FeedAdFilter {
    * pay lookup costs on every subsequent item.
    */
   private static final Object CACHE_LOCK = new Object();
+  private static final String TAG = "ThreadsFeedAdFilter";
+  private static volatile boolean fallbackWarningLogged;
 
   /** Resolved methods by "class#name"; guarded by {@link #CACHE_LOCK}. */
   private static final HashMap<String, Method> METHOD_CACHE = new HashMap<>();
@@ -57,6 +60,11 @@ public final class FeedAdFilter {
    * ThreadIntf.Ckh()/Cnd() -> ThreadItem.CDh()/CIV() -> Media.DED()/DGK()}).
    */
   public static List<?> filterAds(List<?> items) {
+    return filterAds(items, null);
+  }
+
+  /** Patch-time-resolved Media ad predicate; null uses the legacy names as a warned fallback. */
+  public static List<?> filterAds(List<?> items, String mediaPredicateName) {
     if (items == null || items.isEmpty()) {
       return items;
     }
@@ -68,7 +76,7 @@ public final class FeedAdFilter {
       int index = 0;
       while (iterator.hasNext()) {
         Object item = iterator.next();
-        if (isAdUnit(item)) {
+        if (isAdUnit(item, mediaPredicateName)) {
           if (out == null) {
             out = new ArrayList<>(items.size() - 1);
             Iterator<?> prefixIterator = items.iterator();
@@ -95,7 +103,7 @@ public final class FeedAdFilter {
    * @param item The feed unit object to inspect.
    * @return True if the item is determined to be an ad, false otherwise or on reflection failure.
    */
-  private static boolean isAdUnit(Object item) {
+  private static boolean isAdUnit(Object item, String mediaPredicateName) {
     try {
       // 1) Direct DED()/DGK() (X/1qQ ad headers on 434, X/2xO on 445 carry their own flag).
       if (callDed(item)) {
@@ -104,7 +112,7 @@ public final class FeedAdFilter {
       // 2) Media-bearing feed unit: LX/3oS (434) / LX/0hJ (445) .A05() -> Media;
       //    Media.DED() (434) / DGK() (445) is the ad flag.
       Object media = call(item, "A05");
-      if (media != null && callDed(media)) {
+      if (media != null && callMediaPredicate(media, mediaPredicateName)) {
         return true;
       }
       // 3) Thread-carried ad: .A02() -> ThreadIntf; items (Ckh/Cnd) -> ThreadItem
@@ -114,7 +122,7 @@ public final class FeedAdFilter {
         Object threadItems = callAny(thread, "Cnd", "Ckh");
         if (threadItems instanceof List) {
           for (Object ti : (List<?>) threadItems) {
-            if (ti != null && (callDed(ti) || callDed(callAny(ti, "CIV", "CDh")))) {
+            if (ti != null && (callDed(ti) || callMediaPredicate(callAny(ti, "CIV", "CDh"), mediaPredicateName))) {
               return true;
             }
           }
@@ -135,6 +143,26 @@ public final class FeedAdFilter {
    */
   private static boolean callDed(Object o) {
     return o != null && Boolean.TRUE.equals(callAny(o, "DGK", "DED"));
+  }
+
+  private static boolean callMediaPredicate(Object o, String resolvedName) {
+    if (o == null) return false;
+    if (resolvedName != null && !resolvedName.isEmpty()) {
+      return Boolean.TRUE.equals(callAny(o, resolvedName));
+    }
+    if (!fallbackWarningLogged) {
+      synchronized (FeedAdFilter.class) {
+        if (!fallbackWarningLogged) {
+          try {
+            Log.w(TAG, "Patch-time Media predicate unavailable; falling back to legacy DED/DGK names");
+          } catch (Throwable ignored) {
+            // Android logging is absent in the plain JVM extension tests.
+          }
+          fallbackWarningLogged = true;
+        }
+      }
+    }
+    return Boolean.TRUE.equals(callAny(o, "DGK", "DED"));
   }
 
   /**

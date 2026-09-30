@@ -2,6 +2,9 @@ package com.zeldrisho.patches.threads.ads
 
 import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.methodCall
+import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.WideLiteralInstruction
+import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 
@@ -58,4 +61,36 @@ internal object FeedMergeMethod : Fingerprint(
             returnType = "V",
         ),
     ),
+)
+
+/** Ad-predicate implementation selected by its stable GraphQL field literals. */
+internal object MediaAdPredicateHelper : Fingerprint(
+    returnType = "Z",
+    parameters = listOf("L"),
+    custom = { candidate, _ ->
+        val method = candidate as com.android.tools.smali.dexlib2.iface.Method
+        val literals = method.getImplementation()?.getInstructions()?.toList().orEmpty()
+            .filterIsInstance<WideLiteralInstruction>()
+            .map { it.wideLiteral }
+            .toSet()
+        -0x79965650L in literals && 0x10e895f0L in literals
+    },
+)
+
+/** Media no-arg predicate that constructs an argument and invokes the matched helper. */
+internal fun mediaAdPredicate(helper: MethodReference) = Fingerprint(
+    definingClass = "Lcom/instagram/feed/media/Media;",
+    returnType = "Z",
+    parameters = emptyList(),
+    custom = { candidate, _ ->
+        val method = candidate as com.android.tools.smali.dexlib2.iface.Method
+        val instructions = method.getImplementation()?.getInstructions()?.toList().orEmpty()
+        instructions.any { it.opcode == Opcode.NEW_INSTANCE } &&
+            instructions.filterIsInstance<ReferenceInstruction>().any { instruction ->
+                (instruction.reference as? MethodReference)?.let { reference ->
+                    reference.definingClass == helper.definingClass && reference.name == helper.name &&
+                        reference.parameterTypes == helper.parameterTypes && reference.returnType == helper.returnType
+                } == true
+            }
+    },
 )

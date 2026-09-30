@@ -49,12 +49,22 @@ val hideAdsPatch = bytecodePatch(
     execute {
         validateFeedReflectionContract { classDefByOrNull(it) }
         val method = FeedMergeMethod.matchAll(1..1).single().method
-        injectFeedAdFilter(method)
+        val helpers = MediaAdPredicateHelper.matchAll()
+        check(helpers.size == 1) {
+            "Threads Media ad-predicate helper fingerprint matched ${helpers.size} methods; expected exactly one"
+        }
+        val helper = helpers.single().originalMethod
+        val predicates = mediaAdPredicate(helper).matchAll()
+        check(predicates.size == 1) {
+            "Threads Media ad-predicate fingerprint matched ${predicates.size} methods; expected exactly one"
+        }
+        val predicate = predicates.single().originalMethod
+        injectFeedAdFilter(method, predicate.name)
     }
 }
 
 /** Injects the production hook; the caller must first validate the target and reflection ABI. */
-internal fun injectFeedAdFilter(method: MutableMethod) {
+internal fun injectFeedAdFilter(method: MutableMethod, mediaPredicateName: String = "") {
     val impl = method.implementation
         ?: error("BarcelonaFeedCache merge method has no implementation")
     // A0F (434) / A0G (445): (this, LX/obf, Integer, String, String, List, LX/obf, Function3, Z):
@@ -66,7 +76,8 @@ internal fun injectFeedAdFilter(method: MutableMethod) {
         0,
         """
             $loadMove
-            invoke-static {v0}, Lcom/zeldrisho/threads/extension/FeedAdFilter;->filterAds(Ljava/util/List;)Ljava/util/List;
+            const-string v1, "$mediaPredicateName"
+            invoke-static {v0, v1}, Lcom/zeldrisho/threads/extension/FeedAdFilter;->filterAds(Ljava/util/List;Ljava/lang/String;)Ljava/util/List;
             move-result-object v0
             $storeMove
         """,

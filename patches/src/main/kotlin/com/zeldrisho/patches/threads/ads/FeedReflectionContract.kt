@@ -14,7 +14,6 @@ internal data class FeedReflectionMember(val owner: String, val name: String, va
  * their own DED flag, thread-carried items go A02() -> Ckh() -> CDh() -> DED()).
  */
 internal val feedReflectionMembers434 = listOf(
-    FeedReflectionMember("Lcom/instagram/feed/media/Media;", "DED", "Z"),
     FeedReflectionMember("LX/1qQ;", "DED", "Z"),
     FeedReflectionMember("LX/3oS;", "A05", "Lcom/instagram/feed/media/Media;"),
     FeedReflectionMember("LX/3oS;", "A02", "Lcom/instagram/barcelona/model/ThreadIntf;"),
@@ -37,7 +36,6 @@ internal val feedReflectionMembers434 = listOf(
  *   interfaces; Media/CDh return types unchanged).
  */
 internal val feedReflectionMembers445 = listOf(
-    FeedReflectionMember("Lcom/instagram/feed/media/Media;", "DGK", "Z"),
     FeedReflectionMember("LX/2xO;", "DGK", "Z"),
     FeedReflectionMember("LX/0hJ;", "A05", "Lcom/instagram/feed/media/Media;"),
     FeedReflectionMember("LX/0hJ;", "A02", "Lcom/instagram/api/schemas/ThreadIntf;"),
