@@ -5,6 +5,12 @@ Zalo candidates: [plan](plan.md). Publishing: [release](release.md).
 
 ## Cross-app feature investigations
 
+Use the [target-evidence record](target-evidence-template.md) for each candidate. Track
+its status explicitly (uninvestigated, needs runtime proof, ready to implement,
+server-dependent, or rejected), record the pinned input hash and private evidence path,
+and give one concrete next experiment plus positive, negative/control, and regression
+checks. Do not treat static leads as validated behavior.
+
 - **P2 — Threads tracking-link sanitization:** Trace supported-version share and
   copy paths for tracking parameters; strip only known tracking fields while
   preserving content identifiers, fragments, and unrelated query parameters.
@@ -15,7 +21,27 @@ Zalo candidates: [plan](plan.md). Publishing: [release](release.md).
   Use it only as a search lead; independently verify target bytecode and review
   license obligations before adapting any code. No NexAlloy source is copied.
 
+## Tooling reliability and input hardening
+
+- **P1 — Prevent stale workflow evidence:** if machine-readable analysis state is
+  introduced, bind completed stages to hashes of their inputs and evidence, plus the
+  approved design scope. Changing an input, finding, or approved design must invalidate
+  dependent stages rather than merely checking that old evidence paths still exist.
+  Acceptance: tests prove unchanged inputs resume, changed inputs invalidate downstream
+  completion, and failed/blocked stages cannot be mistaken for current success.
+- **P2 — Bound and validate package archive extraction:** audit user-supplied APKM,
+  APKS, XAPK, and ZIP handling, starting with `scripts/extract_smali.py`. Check member
+  paths and file types before extraction; impose reasonable entry/expanded-size limits
+  or safely stream selected APK members to temporary files. Preserve split coverage and
+  never overwrite analysis evidence on malformed input. Add synthetic traversal,
+  oversized-entry, malformed-container, and valid multi-split tests. This is a hardening
+  investigation, not a claim of a confirmed vulnerability.
+
 ## Outstanding private validation
+
+Qualification results belong in the release/PR record, not this backlog. Use the
+[qualification record checklist](validation.md#qualification-record) and retain raw
+APK, device, log, screenshot, and signing artifacts outside Git.
 
 These require devices/private artifacts; documentation and synthetic tests do not complete them.
 

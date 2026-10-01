@@ -7,10 +7,14 @@ release execution and evidence requirements belong in [validation](validation.md
 ## Feature feasibility investigations
 
 These are **not implemented behavior or release expectations**. Before implementation,
-record the exact smali gate, callers, local data flow, server dependencies, narrow
-change, and regression risks in local notes. Classify each as **ready to implement**,
-**needs runtime proof**, or **server-dependent**. Use patch-time fingerprints and
-app-specific extensions, not broad runtime plumbing or remote symbol catalogs.
+record each candidate using the [target-evidence record](target-evidence-template.md)
+in ignored local notes. Include exact smali gate, callers/consumers, local data flow,
+server dependencies, narrow change, uniqueness rationale, and regression risks. Use
+these statuses: **uninvestigated**, **ready to implement**, **needs runtime proof**,
+**server-dependent**, or **rejected**. Every active investigation should name one
+concrete next experiment and positive, negative/control, and regression checks. Use
+patch-time fingerprints and app-specific extensions, not broad runtime plumbing or
+remote symbol catalogs.
 
 | Candidate | Evidence required / boundary |
 | --- | --- |
@@ -36,11 +40,13 @@ See [local-data investigation rules](reverse-engineering.md#learning-from-other-
 
 ### P1: Configurable native backup interval — implemented, qualification pending
 
-The opt-in patch overrides Zalo's native scheduling interval to 1, 3, 6, or 12
-hours while preserving native opt-in, account, network, and backup guards. This
-is not yet device-validated. Prove complete backup/restore round trips, not timer
-execution; measure battery, wakeups, network, and account switching against
-stock/control before treating behavior as qualified.
+**Status:** needs runtime proof. **Next experiment:** qualify one complete scheduled
+backup/restore round trip on a disposable test account, with stock and no-patch
+controls. The opt-in patch overrides Zalo's native scheduling interval to 1, 3, 6,
+or 12 hours while preserving native opt-in, account, network, and backup guards.
+Prove restored messages and media (positive), disabled opt-in/no eligible network
+(control), and battery, wakeups, network, and account-switching behavior (regression)
+before treating behavior as qualified. Timer execution alone is insufficient.
 
 ### P2: Inbox and navigation controls
 
@@ -52,10 +58,13 @@ accessibility, badges, deep links, and resume.
 
 ### P2: Open ordinary content links externally
 
-Trace URL dispatch; allow only validated HTTP(S) content links. Preserve mini-app,
-OA H5, authenticated, payment, OAuth, and non-web handlers. Test malformed URLs,
-missing browsers, cancellation, redirects, chat/feed links, login/payment, deep
-links, and safe in-app fallback.
+**Status:** uninvestigated. **Next experiment:** trace the pinned version's URL
+dispatch from a chat/feed link through its final handler and record the smali-backed
+branch before proposing a change. Allow only validated HTTP(S) content links.
+Positive check: ordinary content URL opens externally; negative/control checks:
+malformed URLs and non-web/custom schemes remain on their native handlers.
+Regression checks: mini-app, OA H5, authenticated, payment, OAuth, redirects,
+missing browser, cancellation, and safe in-app fallback.
 
 ### P2: Analytics and privacy candidates
 
@@ -74,12 +83,15 @@ searches. Notification history and call recording remain separate default-off
 investigations requiring consent, privacy, storage, and second-account tests.
 
 Investigate ad-reporting coverage beyond the existing offline-tracking suppression.
-The pinned base DEX contains the `AdsTrackingReceiver` actions `HitUrls` and
-`SubmitBatch`, and Adtima code has explicit impression/click tracking paths.
-The current patch set does not yet fingerprint these reporting paths. Trace their
-callers, payload scope, and ordinary analytics consumers; suppress only proven
-ad-specific events and preserve non-ad diagnostics and app functionality. Static
-anchors are leads, not behavior validation.
+**Status:** needs runtime proof. **Next experiment:** trace callers and payload
+construction for `AdsTrackingReceiver` actions `HitUrls` and `SubmitBatch`, then
+confirm an ad-specific path without suppressing ordinary analytics. The pinned base DEX contains those actions, and Adtima code has explicit impression/click tracking paths.
+The current patch set does not yet fingerprint these reporting paths. Positive
+check: demonstrate the intended ad-reporting path; negative/control checks: ordinary
+analytics and non-ad diagnostics still operate; regressions: app functionality and
+network-dependent content remain intact. Trace callers, payload scope, and ordinary
+analytics consumers; suppress only proven ad-specific events. Static anchors are
+leads, not behavior validation.
 
 ### P2: Ad rendering and feed filtering
 

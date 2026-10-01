@@ -255,10 +255,11 @@ is authoritative for instruction formats and register limits. For every candidat
 3. Record: access flags, return type (the descriptor after `)` in the method header),
    full parameter descriptors, register count, invoke sequence **in order**, and which
    DEX it came from.
-4. If All target verification is against smali.
-5. Write the finding down (`<analysis>/notes/<topic>.md`) with the smali evidence
-   quoted, plus a fingerprint strategy (which stable strings/calls to match on —
-   see the fingerprint reference in [patch development](patch-development.md)). Unverified findings are not ready for patch-writing.
+4. Verify every target against smali; Java-only candidates are not ready for patch-writing.
+5. Write the finding down using the [target-evidence record](target-evidence-template.md)
+   at `<analysis>/notes/<topic>.md`, including the smali quote and fingerprint strategy
+   (stable strings/calls/opcodes; see [patch development](patch-development.md)).
+   Separate unverified or rejected candidates from verified targets.
 
 ## Write and test the patch
 

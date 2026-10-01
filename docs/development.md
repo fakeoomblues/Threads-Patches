@@ -27,6 +27,14 @@ original split APK → baksmali smali → fingerprint + patch → .mpp → Morph
 
 ## Verify
 
+Check prerequisites without installing tools or changing the host:
+
+```bash
+python3 scripts/doctor.py build      # Java 21+, Python, Gradle wrapper, pre-commit
+python3 scripts/doctor.py analysis   # plus APK recon/decompile tools
+python3 scripts/doctor.py device     # Android CLI deployment capability
+```
+
 Run from the repository root with the [configured toolchain](toolchain.md):
 
 ```bash
