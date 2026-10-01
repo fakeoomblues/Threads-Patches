@@ -29,7 +29,7 @@ jobs:
           stable: true
 
       - name: Install lint tools
-        run: brew install pre-commit actionlint ruff
+        run: brew install pre-commit
 
       - run: pre-commit run --all-files --show-diff-on-failure
       - run: python3 -m unittest discover -s scripts/tests -v

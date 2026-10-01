@@ -30,21 +30,18 @@ repos:
       - id: trailing-whitespace
       - id: check-json
 
-  - repo: local
+  - repo: https://github.com/rhysd/actionlint
+    rev: 914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
     hooks:
       - id: actionlint
-        name: actionlint
-        entry: actionlint
-        language: system
         files: '^\.github/workflows/'
         types: [yaml]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: a56c0b927e6465d37cae3e97d35d4d18ab2b96cd # v0.16.9
+    hooks:
       - id: ruff-check
-        name: ruff check
-        entry: ruff check
-        language: system
         types: [python]
       - id: ruff-format
-        name: ruff format
-        entry: ruff format --check
-        language: system
+        args: [--check]
         types: [python]

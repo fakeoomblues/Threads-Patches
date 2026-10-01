@@ -76,18 +76,17 @@ build output, and local APK analysis are not formatting targets.
 | Spotless: ktlint + google-java-format | Root `build.gradle.kts`; Kotlin, Gradle scripts, extension Java |
 | detekt | `patches/build.gradle.kts`, `config/detekt/detekt.yml`; Kotlin, without type resolution |
 | Android Lint | Extension production and test sources |
-| Ruff check + format | `.pre-commit-config.yaml` using Homebrew `ruff`; `scripts/*.py` |
-| actionlint | `.pre-commit-config.yaml`; workflows; ShellCheck when on PATH (explicitly installed in CI) |
+| Ruff check + format | Pinned isolated hooks in `.pre-commit-config.yaml`; `scripts/*.py` |
+| actionlint | Pinned isolated hook in `.pre-commit-config.yaml`; workflows; ShellCheck when available |
 | Conflict markers + mixed line endings | `.pre-commit-config.yaml`; tracked text files |
 
 `qualityCheck` aggregates Spotless, detekt, and Android Lint. Reports live in
 `patches/build/reports/detekt/` and `extensions/*/build/reports/`.
 Gradle dependencies and CI action revisions are pinned for reproducible builds.
-CI installs the latest stable Homebrew `pre-commit`, `actionlint`, and `ruff`
-formulae. The local hooks invoke the Homebrew-installed `actionlint` and `ruff`
-directly, so those tool versions track Homebrew's stable versions rather than
-pinned hook revisions. Other hook repositories and revisions remain pinned in
-`.pre-commit-config.yaml`. Detekt **2.0.0-alpha.6**
+CI installs Homebrew `pre-commit`; Ruff and actionlint are provided by pinned,
+isolated hook environments, keeping their versions consistent locally and in CI.
+Other hook repositories and revisions remain pinned in `.pre-commit-config.yaml`.
+Detekt **2.0.0-alpha.6**
 remains intentional: its compiler matches Morphe's Kotlin **2.4.10**; stable Detekt
 1.23.8 targets Kotlin 2.0.21 and is not a compatible drop-in. Recheck the
 [compatibility table](https://detekt.dev/docs/introduction/compatibility/) before
@@ -101,8 +100,7 @@ pre-commit uninstall # removes only the pre-commit-managed hook
 ```
 
 The first run needs network access to fetch the configured isolated hook
-environments. `actionlint` must be installed separately through Homebrew. Commits
-do not run Gradle or SDK builds.
+environments. Commits do not run Gradle or SDK builds.
 
 ### Apply formatting explicitly
 

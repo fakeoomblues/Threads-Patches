@@ -8,7 +8,7 @@ Install Homebrew by following [brew.sh](https://brew.sh). Repository development
 and Android/Java tools are managed with Brew:
 
 ```sh
-brew install uv pre-commit ruff actionlint openjdk@21
+brew install uv pre-commit openjdk@21
 brew install --cask android-cli
 brew unlink openjdk
 brew link openjdk@21
@@ -84,8 +84,8 @@ of the maintained toolchain; use `rg` for repository searches.
 
 `uv` is required for the documented Python analysis tools, though not for the
 Gradle build itself. `uv tool` puts isolated executables in `~/.local/bin`; `uvx`
-uses cached temporary environments. Ruff and actionlint are Brew-installed tools;
-Ruff is run directly, while actionlint is invoked by its local pre-commit hook.
+uses cached temporary environments. Ruff and actionlint are installed in isolated
+environments by their pinned pre-commit hooks; no separate system installation is needed.
 Install Frida tooling only for runtime instrumentation, with a
 matching-version/ABI `frida-server` **on the device**:
 [releases](https://github.com/frida/frida/releases), [Android setup](https://frida.re/docs/android/).
