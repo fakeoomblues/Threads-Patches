@@ -3,96 +3,19 @@
 Cross-app backlog only. Validation: [device and build checks](validation.md).
 Zalo candidates: [plan](plan.md). Publishing: [release](release.md).
 
-## Cross-app feature investigations
-
-Use the [target-evidence record](target-evidence-template.md) for each candidate. Track
-its status explicitly (uninvestigated, needs runtime proof, ready to implement,
-server-dependent, or rejected), record the pinned input hash and private evidence path,
-and give one concrete next experiment plus positive, negative/control, and regression
-checks. Do not treat static leads as validated behavior.
-
-- **P2 — Threads tracking-link sanitization:** Trace supported-version share and
-  copy paths for tracking parameters; strip only known tracking fields while
-  preserving content identifiers, fragments, and unrelated query parameters.
-  Avoid global clipboard interception. Test copied/shared URLs from posts,
-  profiles, and media, including malformed and non-Threads clipboard content.
-  NexAlloy-XES at `9033a2eccc011a36a945a41eb47c90a18833b3a2` contains a runtime
-  clipboard-hook candidate, but it is not a compatible Morphe implementation.
-  Use it only as a search lead; independently verify target bytecode and review
-  license obligations before adapting any code. No NexAlloy source is copied.
-
-## Tooling reliability and input hardening
-
-- **P1 — Prevent stale workflow evidence:** if machine-readable analysis state is
-  introduced, bind completed stages to hashes of their inputs and evidence, plus the
-  approved design scope. Changing an input, finding, or approved design must invalidate
-  dependent stages rather than merely checking that old evidence paths still exist.
-  Acceptance: tests prove unchanged inputs resume, changed inputs invalidate downstream
-  completion, and failed/blocked stages cannot be mistaken for current success.
-- **P2 — Bound and validate package archive extraction:** audit user-supplied APKM,
-  APKS, XAPK, and ZIP handling, starting with `scripts/extract_smali.py`. Check member
-  paths and file types before extraction; impose reasonable entry/expanded-size limits
-  or safely stream selected APK members to temporary files. Preserve split coverage and
-  never overwrite analysis evidence on malformed input. Add synthetic traversal,
-  oversized-entry, malformed-container, and valid multi-split tests. This is a hardening
-  investigation, not a claim of a confirmed vulnerability.
-
 ## Outstanding private validation
 
 Qualification results belong in the release/PR record, not this backlog. Use the
 [qualification record checklist](validation.md#qualification-record) and retain raw
 APK, device, log, screenshot, and signing artifacts outside Git.
 
-These require devices/private artifacts; documentation and synthetic tests do not complete them.
-
 | Priority | Work | Procedure |
 | --- | --- | --- |
-| P1 | Stock/control/patched Zalo and Threads journeys, including malformed intents and access boundaries | [Device scope](validation.md#device-validation-scope), [pinned-target assertions](validation.md#repeatable-device-journeys) |
-| P2 | Cold-launch/Threads-scroll baselines; backup scheduling when implemented | [Performance baseline](validation.md#controlled-performance-baseline) |
-| P2 | Pinned input qualification and repeated output-signing checks | [Build qualification](validation.md#build-validation), [signed output](validation.md#re-patch-and-install) |
+| P2 | Cold-launch/Threads-scroll baselines | [Performance baseline](validation.md#controlled-performance-baseline) |
 
-No private APK results are recorded here. Keep stock and output signing identities
-distinct; retain sanitized results in the release/PR record and raw artifacts outside Git.
-
-## CI validation and comparison
-
-The updated PR CI passed on GitHub (run [36753516471](https://github.com/zeldrisho/morphe-patches/actions/runs/36753516471)); `verify` completed and uploaded the `.mpp` artifact. CI uses the runner-provided Android SDK and Gradle resolves missing platform/build-tools packages; no `android-cli` installation is needed.
-
-Compared with the successful main baseline ([36290078042](https://github.com/zeldrisho/morphe-patches/actions/runs/36290078042)), the build job took 1m49s vs 2m56s, and `Gradle verify` took about 1m39s vs 1m56s. Treat this as a single-run observation, not a performance claim: the jobs ran on different dates, and CI/code inputs changed. The baseline Android SDK cache missed; the PR's Gradle cache was read-only and restored/saved zero entries, so this does not compare warm Gradle-cache performance. A main-branch run is needed to seed the Gradle cache, followed by a comparable subsequent run to assess warm-cache behavior.
-
-## Coverage and test architecture
-
-Synthetic DEX/resource fixtures cover representative patch transformations and
-metadata; APK-dependent tests remain opt-in. Coverage floors and reports are
-managed by the verification task (see [development](development.md#verify)).
-
-Remaining work is behavioral, not percentage-driven:
-
-- **P1 — Close synthetic fingerprint gaps:** add positive and one-constraint
-  near-miss DEX cases for remaining Zalo media, Business Box, and telemetry
-  fingerprints. The descriptor inventory initializes definitions but does not
-  validate every filter against both matching and mutated methods.
-- **P1 — Exercise remaining Morphe lifecycle closures:** synthetic helper tests
-  do not run every registered `bytecodePatch` / `resourcePatch` callback. Prioritize
-  package-resource finalization and option application, AD_ID resource callbacks,
-  the complete Send Original Media callback, and telemetry orchestration, including
-  missing/ambiguous target failures where meaningful.
-- **P2 — Preserve the 80% baseline:** add focused tests for observable behavior
-  and regressions; raise the floor only after a stable measured increase, not to
-  chase coverage alone.
-- **P3 — Keep Threads coverage healthy:** preserve meaningful ad-filter edge
-  coverage while adding future runtime features; avoid tests that only defend a
-  percentage target.
-
-## Deferred until a concrete trigger
-
-- **Shrinker safety/size:** establish whether extension packaging invokes R8.
-  If enabled, protect injected names, descriptors/flags, and reflection contracts;
-  extend embedded-Dex checks and measure savings before narrowing keep rules.
-  Never shrink the proprietary host APK.
-- **Resource mapping:** resolve names to IDs when a UI fingerprint needs it;
-  test missing resources, lifecycle, and repeated sessions.
-- **README/catalog split:** defer `PATCHES.md` until the two-app catalog is unwieldy.
+The baseline remains pending local device access. Backup scheduling depends on the
+local backup/export feature investigation in [the Zalo plan](plan.md); do not schedule
+it before that feature is accepted and implemented.
 
 ## Boundaries
 

@@ -10,8 +10,15 @@ and Android/Java tools are managed with Brew:
 ```sh
 brew install uv pre-commit openjdk@21
 brew install --cask android-cli
-brew unlink openjdk
-brew link openjdk@21
+```
+
+`JAVA_HOME` should point to Homebrew's Java 21 installation. Add this to your
+shell environment using its normal configuration mechanism, and put its `bin`
+directory first on `PATH` when the shell's default Java is not 21:
+
+```sh
+export JAVA_HOME="$HOMEBREW_PREFIX/opt/openjdk@21"
+export PATH="$JAVA_HOME/bin:$PATH"
 ```
 
 `uv` is required by the documented toolchain for on-demand Python analysis tools
@@ -169,9 +176,12 @@ and input SHA-256.
 
 ## Build-tool behavior
 
-Extensions package compiled DEX through Morphe's `extension` plugin without a
-standalone R8 configuration. Shrinker behavior is not established by this repository's
-configuration; the bundle contract checks resulting DEX descriptors and flags.
+The current extension builds use Morphe's `extension` plugin and AGP's D8
+`dexBuilder`/`mergeDex` tasks. Neither extension has minification enabled, the
+release task graphs contain no `minifyReleaseWithR8` task, and no R8 mapping output
+is produced. Shrinker keep rules are therefore not currently applicable. Reassess
+if minification is enabled; never shrink the proprietary host APK. The bundle
+contract checks the resulting extension DEX descriptors and flags.
 
 ## Verify setup
 
