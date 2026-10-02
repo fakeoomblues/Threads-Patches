@@ -5,6 +5,7 @@ import com.android.tools.smali.dexlib2.iface.instruction.NarrowLiteralInstructio
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction11x
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction21c
+import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction31c
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction3rc
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableStringReference
@@ -16,14 +17,22 @@ import kotlin.test.assertFailsWith
 
 class BackupIntervalTransformationTest {
     /** Builds a synthetic interval getter and wide result with a configurable preference key. */
-    private fun scheduler(key: String = "SERVER_CONFIG_SYNC_MESSAGE_INTERVAL_") = syntheticMutableMethod(
+    private fun scheduler(
+        key: String = "SERVER_CONFIG_SYNC_MESSAGE_INTERVAL_",
+        keyRegister: Int = 3,
+        keyOpcode: Opcode = Opcode.CONST_STRING,
+    ) = syntheticMutableMethod(
         registerCount = 6,
         instructions = listOf(
-            ImmutableInstruction21c(Opcode.CONST_STRING, 5, ImmutableStringReference(key)),
+            if (keyOpcode == Opcode.CONST_STRING_JUMBO) {
+                ImmutableInstruction31c(keyOpcode, keyRegister, ImmutableStringReference(key))
+            } else {
+                ImmutableInstruction21c(keyOpcode, keyRegister, ImmutableStringReference(key))
+            },
             ImmutableInstruction3rc(
                 Opcode.INVOKE_STATIC_RANGE,
-                4,
                 0,
+                4,
                 ImmutableMethodReference(
                     "Lu40/p0;",
                     "Y",
@@ -46,7 +55,14 @@ class BackupIntervalTransformationTest {
         assertEquals(10_800_000, (result as NarrowLiteralInstruction).narrowLiteral)
     }
 
-    /** Verifies the millisecond conversion for every supported backup interval. */
+    /** Verifies that a jumbo string instruction can load the interval key. */
+    @Test
+    fun acceptsJumboStringLoadForIntervalKey() {
+        val method = scheduler(keyOpcode = Opcode.CONST_STRING_JUMBO)
+        overrideBackupInterval(method, "6")
+        assertEquals(21_600_000, (method.implementation!!.instructions[2] as NarrowLiteralInstruction).narrowLiteral)
+    }
+
     @Test
     fun supportsEachAllowedIntervalInMilliseconds() {
         mapOf("1" to 3_600_000, "3" to 10_800_000, "6" to 21_600_000, "12" to 43_200_000).forEach { (hours, millis) ->
@@ -62,6 +78,9 @@ class BackupIntervalTransformationTest {
         assertFailsWith<IllegalArgumentException> { overrideBackupInterval(scheduler(), "2") }
         assertFailsWith<IllegalStateException> {
             overrideBackupInterval(scheduler("UNRELATED_CONFIG_KEY"), "6")
+        }
+        assertFailsWith<IllegalStateException> {
+            overrideBackupInterval(scheduler(keyRegister = 5), "6")
         }
     }
 }

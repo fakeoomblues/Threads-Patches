@@ -5,8 +5,10 @@ import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.stringOption
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.android.tools.smali.dexlib2.Opcode
+import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import com.android.tools.smali.dexlib2.iface.instruction.RegisterRangeInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
 import com.zeldrisho.patches.zalo.shared.Constants.COMPATIBILITY_ZALO
@@ -33,11 +35,17 @@ internal fun overrideBackupInterval(method: MutableMethod, hours: String) {
     }
     check(getterIndices.size == 1) { "Zalo backup interval: expected exactly one interval getter" }
     val getterIndex = getterIndices.single()
-    val keyExists = instructions.take(getterIndex).any { instruction ->
-        val reference = (instruction as? ReferenceInstruction)?.reference as? StringReference
-        instruction.opcode == Opcode.CONST_STRING && reference?.string == INTERVAL_KEY
-    }
-    check(keyExists) { "Zalo backup interval: account-specific interval key not found before getter" }
+    val getter = instructions[getterIndex]
+    val keyRegister = invokeRegisterAt(getter, 3)
+        ?: error("Zalo backup interval: getter string argument register not found")
+    val keyLoad = instructions.getOrNull(getterIndex - 1)
+    val keyLoadRegister = (keyLoad as? OneRegisterInstruction)?.registerA
+    val keyReference = (keyLoad as? ReferenceInstruction)?.reference as? StringReference
+    check(
+        keyLoad?.opcode in setOf(Opcode.CONST_STRING, Opcode.CONST_STRING_JUMBO) &&
+            keyLoadRegister == keyRegister &&
+            keyReference?.string == INTERVAL_KEY,
+    ) { "Zalo backup interval: account-specific interval key is not passed to getter" }
     val resultIndex = getterIndex + 1
     check(resultIndex < instructions.size && instructions[resultIndex].opcode == Opcode.MOVE_RESULT_WIDE) {
         "Zalo backup interval: interval getter is not followed by move-result-wide"
@@ -47,6 +55,25 @@ internal fun overrideBackupInterval(method: MutableMethod, hours: String) {
     val millis = hours.toLong() * 3_600_000L
     method.replaceInstruction(resultIndex, "const-wide/32 v$register, $millis")
 }
+
+@Suppress("MagicNumber") // DEX invoke registers are positional (C through G).
+private fun invokeRegisterAt(instruction: com.android.tools.smali.dexlib2.iface.instruction.Instruction, index: Int): Int? =
+    when (instruction) {
+        is FiveRegisterInstruction -> when {
+            index >= instruction.registerCount -> null
+            index == 0 -> instruction.registerC
+            index == 1 -> instruction.registerD
+            index == 2 -> instruction.registerE
+            index == 3 -> instruction.registerF
+            index == 4 -> instruction.registerG
+            else -> null
+        }
+
+        is RegisterRangeInstruction ->
+            if (index < instruction.registerCount) instruction.startRegister + index else null
+
+        else -> null
+    }
 
 @Suppress("unused")
 val configurableZaloBackupIntervalPatch = bytecodePatch(

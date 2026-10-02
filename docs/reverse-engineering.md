@@ -96,7 +96,7 @@ Search in a fixed order — protections first, because an integrity/root check w
 break testing of everything else. Start with a one-pass triage:
 
 ```bash
-python3 scripts/hunt_signals.py <analysis>/<app>/<version>/smali [--files]
+python3 scripts/hunt_signals.py <analysis>/smali [--files]
 ```
 
 `scripts/hunt_signals.py` is the canonical pattern list. The buckets below
@@ -173,7 +173,7 @@ Obfuscation-resistant fallback: when call sites inline to `a.b(c, "…")`, grep 
 path literals themselves — R8 does not obfuscate string contents:
 
 ```bash
-rg -o '"(/[A-Za-z0-9_{}.\-]+(/[A-Za-z0-9_{}.\-]+)+/?)"' <analysis>/<app>/<version>/smali -g '*.smali'
+rg -o '"(/[A-Za-z0-9_{}.\-]+(/[A-Za-z0-9_{}.\-]+)+/?)"' <analysis>/smali -g '*.smali'
 ```
 
 ### Dynamic confirmation for runtime gates

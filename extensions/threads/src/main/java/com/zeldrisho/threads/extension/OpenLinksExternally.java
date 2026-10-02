@@ -18,13 +18,14 @@ public final class OpenLinksExternally {
       String scheme = uri.getScheme();
       if (scheme == null
           || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
-          || uri.getHost() == null) {
+          || uri.getHost() == null
+          || uri.getHost().isEmpty()) {
         return false;
       }
       Intent intent = new Intent(Intent.ACTION_VIEW, uri);
       android.content.ComponentName resolved = intent.resolveActivity(context.getPackageManager());
-      if (resolved == null) return false;
-      if (context.getPackageName().equals(resolved.getPackageName())) return false;
+      if (resolved != null && context.getPackageName().equals(resolved.getPackageName()))
+        return false;
       if (!(context instanceof android.app.Activity)) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       }

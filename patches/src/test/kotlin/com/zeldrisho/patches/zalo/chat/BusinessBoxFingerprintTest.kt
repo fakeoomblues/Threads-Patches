@@ -20,7 +20,7 @@ import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class BusinessBoxFingerprintTest {
     @get:Rule val temporary = TemporaryFolder()
@@ -142,11 +142,12 @@ class BusinessBoxFingerprintTest {
                 ).single().originalMethod.name,
             )
             BusinessBoxListInsertionFingerprint.clearMatch()
-            assertFailsWith<app.morphe.patcher.patch.PatchException> {
-                BusinessBoxListInsertionFingerprint.matchOrNull(
-                    insertionMethod("OtherBox"),
-                )
-            }
+            assertTrue(
+                BusinessBoxListInsertionFingerprint.matchAll(
+                    classDef("Lje0/u;", insertionMethod("OtherBox")),
+                    0..1,
+                ).isEmpty(),
+            )
         }
     }
 
@@ -163,11 +164,12 @@ class BusinessBoxFingerprintTest {
                 ).single().originalMethod.name,
             )
             BusinessBoxPeriodicBranchFingerprint.clearMatch()
-            assertFailsWith<app.morphe.patcher.patch.PatchException> {
-                BusinessBoxPeriodicBranchFingerprint.matchOrNull(
-                    periodicMethod("ordinary_thread"),
-                )
-            }
+            assertTrue(
+                BusinessBoxPeriodicBranchFingerprint.matchAll(
+                    classDef("Lof1/o;", periodicMethod("ordinary_thread")),
+                    0..1,
+                ).isEmpty(),
+            )
         }
     }
 }

@@ -87,9 +87,10 @@ tasks.register("coverageVerification") {
                 .map { classNodes.item(it) as org.w3c.dom.Element }
                 .filterNot { it.getAttribute("name") in robolectricSandboxExclusions }
                 .mapNotNull { cls ->
-                    cls.getElementsByTagName("counter").let { counters ->
-                        (0 until counters.length)
-                            .map { counters.item(it) as org.w3c.dom.Element }
+                    cls.childNodes.let { children ->
+                        (0 until children.length)
+                            .mapNotNull { children.item(it) as? org.w3c.dom.Element }
+                            .filter { it.tagName == "counter" }
                             .firstOrNull { it.getAttribute("type") == "LINE" }
                     }
                 }

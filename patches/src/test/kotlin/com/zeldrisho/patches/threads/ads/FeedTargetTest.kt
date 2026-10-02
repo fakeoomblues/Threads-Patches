@@ -199,7 +199,7 @@ class FeedTargetTest {
     @Test fun rejectsMixedVersionSets() {
         // Half of each set (e.g. 434 Media.DED + 445 wrapper) must NOT validate:
         // a half-drifted app fails loudly instead of filtering with the wrong predicate.
-        val mixed = (feedReflectionMembers434.take(3) + feedReflectionMembers445.takeLast(3))
+        val mixed = (feedReflectionMembers434.take(1) + feedReflectionMembers445.takeLast(2))
             .groupBy { it.owner }.mapValues { (owner, owned) ->
                 classDef(
                     owner,

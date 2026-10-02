@@ -36,17 +36,21 @@ public class OpenLinksExternallyTest {
     assertEquals(Uri.parse("https://example.com/path"), started.getData());
   }
 
-  /** Verifies that invalid inputs and unresolved URLs return false without launching an activity. */
+  /**
+   * Verifies invalid inputs are rejected and unresolved URLs are still passed to Android to launch.
+   */
   @Test
   public void invalidUrlsAndMissingExternalHandlerFallBack() {
     Activity activity = Robolectric.buildActivity(Activity.class).setup().get();
     assertFalse(OpenLinksExternally.open(null, "https://example.com"));
     assertFalse(OpenLinksExternally.open(activity, null));
     assertFalse(OpenLinksExternally.open(activity, "javascript:alert(1)"));
-    assertFalse(OpenLinksExternally.open(activity, "https:///missing-host"));
+    assertFalse(OpenLinksExternally.open(activity, "https://"));
     assertFalse(OpenLinksExternally.open(activity, "not a URL"));
-    assertFalse(OpenLinksExternally.open(activity, "https://example.com"));
-    assertNull(Shadows.shadowOf(activity).getNextStartedActivity());
+    assertTrue(OpenLinksExternally.open(activity, "https://example.com"));
+    Intent attempted = Shadows.shadowOf(activity).getNextStartedActivity();
+    assertNotNull(attempted);
+    assertEquals(Intent.ACTION_VIEW, attempted.getAction());
   }
 
   /** Verifies that URLs resolving to the host package retain Threads link handling. */
