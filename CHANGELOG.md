@@ -5,7 +5,11 @@ Release and changelog policy: [docs/release.md](docs/release.md#changelog-policy
 ## Unreleased
 
 ### ✨ New Features
+* **Threads - Open links externally:** Opens HTTP(S) links in an external app when available; otherwise Threads handles them normally.
 * **Zalo - Configurable native backup interval:** Add an opt-in option for automatic backup checks every 1, 3, 6, or 12 hours. Device behavior is not yet validated.
+
+### 🚀 Updated App Support
+* **Threads:** Add support for 449.0.0.54.82.
 
 ## [1.6.3](https://github.com/zeldrisho/morphe-patches/compare/v1.6.2...v1.6.3) (2026-09-27)
 

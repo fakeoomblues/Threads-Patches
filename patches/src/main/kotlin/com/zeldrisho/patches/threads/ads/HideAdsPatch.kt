@@ -5,6 +5,9 @@ import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
 import com.zeldrisho.patches.threads.shared.Constants.COMPATIBILITY_THREADS
 
+private const val FEED_MERGE_PARAMETER_COUNT = 9
+private const val FEED_FILTER_SCRATCH_REGISTER_COUNT = 6
+
 /**
  * Hides sponsored posts from the Threads feed.
  *
@@ -61,7 +64,18 @@ val hideAdsPatch = bytecodePatch(
             .originalMethod
         val threadItems = requireSingleFeedMatch("thread-items accessor", threadItemsAccessor(threadAccessor).matchAll())
             .originalMethod
-        injectFeedAdFilter(method, predicate.name, mediaAccessor.name, threadAccessor.name, threadItems.name)
+        val itemMedia = requireSingleFeedMatch(
+            "thread-item media accessor",
+            threadItemMediaAccessor().matchAll(),
+        ).originalMethod
+        injectFeedAdFilter(
+            method,
+            predicate.name,
+            mediaAccessor.name,
+            threadAccessor.name,
+            threadItems.name,
+            itemMedia.name,
+        )
     }
 }
 
@@ -78,11 +92,15 @@ internal fun injectFeedAdFilter(
     mediaAccessorName: String = "",
     threadAccessorName: String = "",
     threadItemsAccessorName: String = "",
+    itemMediaAccessorName: String = "",
 ) {
     val impl = method.implementation
         ?: error("BarcelonaFeedCache merge method has no implementation")
     // A0F (434) / A0G (445): (this, LX/obf, Integer, String, String, List, LX/obf, Function3, Z):
     // 9 params including `this`; the feed list is param index 5 (p5).
+    check(impl.registerCount - FEED_MERGE_PARAMETER_COUNT >= FEED_FILTER_SCRATCH_REGISTER_COUNT) {
+        "BarcelonaFeedCache merge method needs six local scratch registers for the feed filter"
+    }
     val listReg = feedListRegister(impl.registerCount)
     val loadMove = feedListLoadMove(listReg)
     val storeMove = feedListStoreMove(listReg)
@@ -94,7 +112,8 @@ internal fun injectFeedAdFilter(
             const-string v2, "$mediaAccessorName"
             const-string v3, "$threadAccessorName"
             const-string v4, "$threadItemsAccessorName"
-            invoke-static {v0, v1, v2, v3, v4}, Lcom/zeldrisho/threads/extension/FeedAdFilter;->filterAds(Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;
+            const-string v5, "$itemMediaAccessorName"
+            invoke-static/range {v0 .. v5}, Lcom/zeldrisho/threads/extension/FeedAdFilter;->filterAds(Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;
             move-result-object v0
             $storeMove
         """,

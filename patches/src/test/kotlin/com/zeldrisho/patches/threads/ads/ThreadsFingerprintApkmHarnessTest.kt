@@ -7,6 +7,7 @@ import app.morphe.patcher.patch.BytecodePatchContext
 import com.android.tools.smali.dexlib2.DexFileFactory
 import com.android.tools.smali.dexlib2.Opcodes
 import com.android.tools.smali.dexlib2.iface.ClassDef
+import com.zeldrisho.patches.threads.links.WebLinkHandler
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -89,6 +90,7 @@ class ThreadsFingerprintApkmHarnessTest {
             } else {
                 emptyList()
             }
+            val itemMediaAccessors = scan(all, threadItemMediaAccessor(), patchContext)
             return linkedMapOf(
                 "helper" to helper.size,
                 "Media predicate" to mediaPredicate.size,
@@ -96,6 +98,8 @@ class ThreadsFingerprintApkmHarnessTest {
                 "Media accessor" to mediaAccessors.size,
                 "thread accessor" to threadAccessors.size,
                 "thread-items accessor" to threadItemsAccessors.size,
+                "thread-item media accessor" to itemMediaAccessors.size,
+                "external-link handler" to scan(all, WebLinkHandler, patchContext).size,
             )
         }
     }
@@ -116,10 +120,12 @@ class ThreadsFingerprintApkmHarnessTest {
                 assertEquals(1, counts.getValue("thread accessor"), "$label ThreadIntf-role accessor")
                 assertEquals(1, counts.getValue("Media predicate"), "$label Media predicate")
                 assertEquals(1, counts.getValue("thread-items accessor"), "$label thread-items accessor")
+                assertEquals(1, counts.getValue("thread-item media accessor"), "$label thread-item media accessor")
+                assertEquals(1, counts.getValue("external-link handler"), "$label external-link handler")
             }
         }
         println("fingerprint\\build\t" + results.keys.joinToString("\t"))
-        listOf("helper", "Media predicate", "feedContent anchor", "Media accessor", "thread accessor", "thread-items accessor").forEach { fingerprint ->
+        listOf("helper", "Media predicate", "feedContent anchor", "Media accessor", "thread accessor", "thread-items accessor", "thread-item media accessor", "external-link handler").forEach { fingerprint ->
             println(fingerprint + "\t" + results.values.joinToString("\t") { it.getValue(fingerprint).toString() })
         }
     }

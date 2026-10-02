@@ -144,6 +144,18 @@ internal fun threadItemsAccessor(threadAccessor: MethodReference) = Fingerprint(
 )
 
 /** Finds a wrapper accessor in the class owning the matched feedContent accessor. */
+internal fun threadItemMediaAccessor() = Fingerprint(
+    definingClass = "Lcom/instagram/api/schemas/ThreadItemIntf;",
+    returnType = "Lcom/instagram/feed/media/Media;",
+    parameters = emptyList(),
+    custom = { candidate, _ ->
+        val method = candidate as com.android.tools.smali.dexlib2.iface.Method
+        AccessFlags.PUBLIC.isSet(method.accessFlags) &&
+            AccessFlags.ABSTRACT.isSet(method.accessFlags) &&
+            !AccessFlags.STATIC.isSet(method.accessFlags)
+    },
+)
+
 internal fun feedWrapperAccessor(anchor: MethodReference, returnType: String) = Fingerprint(
     definingClass = anchor.definingClass,
     returnType = returnType,

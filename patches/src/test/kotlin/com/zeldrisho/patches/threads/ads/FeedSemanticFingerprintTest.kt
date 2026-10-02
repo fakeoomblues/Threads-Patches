@@ -17,6 +17,7 @@ import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstructio
 import com.android.tools.smali.dexlib2.immutable.instruction.ImmutableInstruction51l
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableFieldReference
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableMethodReference
+import com.android.tools.smali.dexlib2.immutable.reference.ImmutableStringReference
 import com.android.tools.smali.dexlib2.immutable.reference.ImmutableTypeReference
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -67,6 +68,32 @@ class FeedSemanticFingerprintTest {
         emptyList(),
         methods.toList(),
     )
+
+    @Test fun feedContentAndThreadItemMediaAccessorsResolveByStableShape() {
+        val feedOwner = "LFeedWrapper;"
+        val content = method(
+            feedOwner,
+            "renamedContent",
+            "L",
+            listOf(ImmutableInstruction21c(Opcode.CONST_STRING, 0, ImmutableStringReference("feedContent"))),
+        )
+        val itemOwner = "Lcom/instagram/api/schemas/ThreadItemIntf;"
+        val itemMedia = ImmutableMethod(
+            itemOwner,
+            "renamedMedia",
+            emptyList(),
+            "Lcom/instagram/feed/media/Media;",
+            AccessFlags.PUBLIC.value or AccessFlags.ABSTRACT.value,
+            emptySet(),
+            emptySet(),
+            null,
+        )
+        with(context()) {
+            FeedContentAccessor.clearMatch()
+            assertEquals("renamedContent", FeedContentAccessor.matchAll(owner(feedOwner, content), 1..1).single().originalMethod.name)
+            assertEquals("renamedMedia", threadItemMediaAccessor().matchAll(owner(itemOwner, itemMedia), 1..1).single().originalMethod.name)
+        }
+    }
 
     @Test fun selectsMediaHelperByBothGraphQlLiterals() {
         val good = method(

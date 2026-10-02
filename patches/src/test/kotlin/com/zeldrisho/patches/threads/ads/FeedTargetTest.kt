@@ -282,7 +282,7 @@ class FeedTargetTest {
                 match.originalMethod.name in setOf("A0F", "A0G"),
                 "unexpected merge method: ${match.originalMethod.name}",
             )
-            assertEquals(46, match.originalMethod.implementation!!.registerCount)
+            assertTrue(match.originalMethod.implementation!!.registerCount in setOf(45, 46))
         }
     }
 }

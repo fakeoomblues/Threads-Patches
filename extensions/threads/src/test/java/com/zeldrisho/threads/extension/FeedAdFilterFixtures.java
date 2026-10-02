@@ -154,6 +154,67 @@ final class FeedAdFilterFixtures {
     }
   }
 
+  /** Test-only 449 media shape; its predicate name is passed just as the APK resolver does. */
+  public static class FakeMedia449 {
+    private final boolean ad;
+
+    FakeMedia449(boolean ad) {
+      this.ad = ad;
+    }
+
+    public boolean DKT() {
+      return ad;
+    }
+  }
+
+  public static class FakeFeedUnit449 {
+    private final FakeMedia449 media;
+
+    FakeFeedUnit449(boolean ad) {
+      media = new FakeMedia449(ad);
+    }
+
+    public FakeMedia449 A05() {
+      return media;
+    }
+  }
+
+  public static class FakeThreadItem449 {
+    private final FakeMedia449 media;
+
+    FakeThreadItem449(boolean ad) {
+      media = new FakeMedia449(ad);
+    }
+
+    public FakeMedia449 CLK() {
+      return media;
+    }
+  }
+
+  public static class FakeThread449 {
+    private final List<FakeThreadItem449> items;
+
+    FakeThread449(FakeThreadItem449... items) {
+      this.items = Arrays.asList(items);
+    }
+
+    public List<FakeThreadItem449> CrL() {
+      return items;
+    }
+  }
+
+  public static class FakeThreadUnit449 {
+    private final FakeThread449 thread;
+
+    FakeThreadUnit449(FakeThread449 thread) {
+      this.thread = thread;
+    }
+
+    public FakeThread449 A02() {
+      return thread;
+    }
+  }
+
   /** Fake ad header (X/2xO on 445) that directly exposes DGK() as true. */
   public static class FakeAdHeader445 {
     /** Returns the direct 445 ad predicate. */
