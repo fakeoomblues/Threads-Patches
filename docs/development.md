@@ -83,9 +83,10 @@ build output, and local APK analysis are not formatting targets.
 `qualityCheck` aggregates Spotless, detekt, and Android Lint. Reports live in
 `patches/build/reports/detekt/` and `extensions/*/build/reports/`.
 Gradle dependencies and CI action revisions are pinned for reproducible builds.
-CI installs Homebrew `pre-commit`; Ruff and actionlint are provided by pinned,
-isolated hook environments, keeping their versions consistent locally and in CI.
-Other hook repositories and revisions remain pinned in `.pre-commit-config.yaml`.
+CI runs the pinned `pre-commit/action` GitHub Action; Ruff and actionlint are
+provided by pinned, isolated hook environments, keeping their versions consistent
+locally and in CI. Other hook repositories and revisions remain pinned in
+`.pre-commit-config.yaml`.
 Detekt **2.0.0-alpha.6**
 remains intentional: its compiler matches Morphe's Kotlin **2.4.10**; stable Detekt
 1.23.8 targets Kotlin 2.0.21 and is not a compatible drop-in. Recheck the

@@ -23,15 +23,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@e99025eb970cfa124b8284a35463d87426917478 # 2026.09.28.1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
-          stable: true
+          python-version: '3.x'
 
-      - name: Install lint tools
-        run: brew install pre-commit
-
-      - run: pre-commit run --all-files --show-diff-on-failure
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
       - run: python3 -m unittest discover -s scripts/tests -v
 
   build:
