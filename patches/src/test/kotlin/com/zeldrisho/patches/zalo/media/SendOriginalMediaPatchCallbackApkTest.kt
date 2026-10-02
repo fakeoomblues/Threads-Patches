@@ -15,6 +15,11 @@ import kotlin.test.assertEquals
 class SendOriginalMediaPatchCallbackApkTest {
     @get:Rule val temporary = TemporaryFolder()
 
+    /**
+     * Runs the original-media callback and checks the selected-quality replacement opcodes.
+     *
+     * Requires ZALO_TEST_APK; skips when the pinned base APK is not supplied.
+     */
     @Test
     fun fullCallbackMatchesAndTransformsPinnedTarget() {
         val path = System.getenv("ZALO_TEST_APK")

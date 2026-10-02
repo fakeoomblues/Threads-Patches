@@ -22,6 +22,7 @@ import org.robolectric.annotation.Config;
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28, instrumentedPackages = "com.zeldrisho.threads.extension")
 public class OpenLinksExternallyTest {
+  /** Verifies that a trimmed web URL launches an external ACTION_VIEW activity. */
   @Test
   public void validWebUrlLaunchesExternalActivity() {
     Activity activity = Robolectric.buildActivity(Activity.class).setup().get();
@@ -35,6 +36,7 @@ public class OpenLinksExternallyTest {
     assertEquals(Uri.parse("https://example.com/path"), started.getData());
   }
 
+  /** Verifies that invalid inputs and unresolved URLs return false without launching an activity. */
   @Test
   public void invalidUrlsAndMissingExternalHandlerFallBack() {
     Activity activity = Robolectric.buildActivity(Activity.class).setup().get();
@@ -47,6 +49,7 @@ public class OpenLinksExternallyTest {
     assertNull(Shadows.shadowOf(activity).getNextStartedActivity());
   }
 
+  /** Verifies that URLs resolving to the host package retain Threads link handling. */
   @Test
   public void doesNotRecaptureUrlsResolvedToThreadsItself() {
     Activity activity = Robolectric.buildActivity(Activity.class).setup().get();
@@ -59,6 +62,7 @@ public class OpenLinksExternallyTest {
     assertNull(Shadows.shadowOf(activity).getNextStartedActivity());
   }
 
+  /** Verifies that launching from an application context sets FLAG_ACTIVITY_NEW_TASK. */
   @Test
   public void applicationContextUsesNewTaskFlag() {
     android.content.Context context = RuntimeEnvironment.getApplication();
@@ -71,6 +75,7 @@ public class OpenLinksExternallyTest {
     assertTrue((started.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0);
   }
 
+  /** Builds a synthetic resolver result for an activity outside the host package. */
   private static ResolveInfo browser() {
     ResolveInfo info = new ResolveInfo();
     info.activityInfo = new ActivityInfo();

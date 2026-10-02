@@ -109,6 +109,7 @@ class FeedTargetTest {
         }
     }
 
+    /** Verifies that two otherwise valid feed-merge methods fail unique-target resolution. */
     @Test fun rejectsAmbiguousMergeTargets() {
         val methods = listOf(mergeMethod("first"), mergeMethod("second"))
         with(context()) {
@@ -119,6 +120,7 @@ class FeedTargetTest {
         }
     }
 
+    /** Verifies that the thread-items getter resolves uniquely and duplicate getters are rejected. */
     @Test fun threadItemsFingerprintRequiresExactlyOneAbstractListGetter() {
         val owner = "Lcom/instagram/api/schemas/ThreadIntf;"
         val getter = ImmutableMethod(

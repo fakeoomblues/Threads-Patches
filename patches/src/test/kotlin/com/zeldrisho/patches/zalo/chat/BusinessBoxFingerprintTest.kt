@@ -25,6 +25,7 @@ import kotlin.test.assertFailsWith
 class BusinessBoxFingerprintTest {
     @get:Rule val temporary = TemporaryFolder()
 
+    /** Creates an isolated Zalo patch context for class-scoped fingerprint matching. */
     private fun context(): BytecodePatchContext {
         val config = PatcherConfig(apkFile = temporary.newFile(), temporaryFilesPath = temporary.newFolder())
         val metadata = PackageMetadata::class.java.constructors.single().newInstance(
@@ -38,6 +39,7 @@ class BusinessBoxFingerprintTest {
             .newInstance(config, metadata)
     }
 
+    /** Wraps one synthetic method in a public class with the supplied descriptor. */
     private fun classDef(type: String, method: ImmutableMethod) = ImmutableClassDef(
         type,
         AccessFlags.PUBLIC.value,
@@ -49,6 +51,7 @@ class BusinessBoxFingerprintTest {
         listOf(method),
     )
 
+    /** Builds a business-box insertion candidate with a configurable enum field name. */
     private fun insertionMethod(fieldName: String) = ImmutableMethod(
         "Lje0/u;",
         "G",
@@ -96,6 +99,7 @@ class BusinessBoxFingerprintTest {
         ),
     )
 
+    /** Builds a periodic business-box branch with a configurable category literal. */
     private fun periodicMethod(category: String) = ImmutableMethod(
         "Lof1/o;",
         "a",
@@ -125,6 +129,7 @@ class BusinessBoxFingerprintTest {
         ),
     )
 
+    /** Verifies a matching insertion shape and rejects a different business-box enum field. */
     @Test
     fun insertionFingerprintRequiresBothBusinessMarkerAndConstructor() {
         with(context()) {
@@ -145,6 +150,7 @@ class BusinessBoxFingerprintTest {
         }
     }
 
+    /** Verifies the business category matches while an ordinary-thread category is rejected. */
     @Test
     fun periodicFingerprintRequiresBusinessCategoryLiteral() {
         with(context()) {

@@ -21,6 +21,7 @@ import kotlin.test.assertTrue
 class OpenLinksExternallyTest {
     @get:Rule val temporary = TemporaryFolder()
 
+    /** Creates an isolated Threads patch context for class-scoped fingerprint matching. */
     private fun context(): BytecodePatchContext {
         val config = PatcherConfig(apkFile = temporary.newFile("input.apk"), temporaryFilesPath = temporary.newFolder())
         val metadata = PackageMetadata::class.java.constructors.single().newInstance(
@@ -33,6 +34,7 @@ class OpenLinksExternallyTest {
             .newInstance(config, metadata)
     }
 
+    /** Verifies that the web-link handler matches its signature and ACTION_VIEW literal after renaming. */
     @Test fun fingerprintMatchesUrlHandlerSemanticAnchor() {
         val parameters = listOf(
             "Landroid/content/Context;",
@@ -75,6 +77,7 @@ class OpenLinksExternallyTest {
         }
     }
 
+    /** Verifies the extension call and fallback branch while retaining the original NOP body. */
     @Test fun injectionUsesSafeScratchRegistersAndPreservesNormalHandler() {
         val method = syntheticMutableMethod(
             definingClass = "Lcom/instagram/barcelona/weblink/WebLinkUseCase;",

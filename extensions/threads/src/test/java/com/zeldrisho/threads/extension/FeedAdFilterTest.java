@@ -15,18 +15,22 @@ import org.junit.Test;
 /** Unit tests for {@link FeedAdFilter}. Pure JVM — no Android deps. */
 public class FeedAdFilterTest {
 
+  /** Filters a feed using the resolved member names for Threads 434. */
   private static List<?> filter434(List<?> items) {
     return FeedAdFilter.filterAds(items, "DED", "A05", "A02", "Ckh", "CDh");
   }
 
+  /** Filters a feed using the resolved member names for Threads 445. */
   private static List<?> filter445(List<?> items) {
     return FeedAdFilter.filterAds(items, "DGK", "A05", "A02", "Cnd", "CIV");
   }
 
+  /** Filters a feed using the resolved member names for Threads 449. */
   private static List<?> filter449(List<?> items) {
     return FeedAdFilter.filterAds(items, "DKT", "A05", "A02", "CrL", "CLK");
   }
 
+  /** Exercises fallback behavior when no reflection member names are available. */
   private static List<?> withoutResolvedMembers(List<?> items) {
     return FeedAdFilter.filterAds(items, null, null, null, null, null);
   }
@@ -47,6 +51,7 @@ public class FeedAdFilterTest {
     assertSame(in, filter434(in));
   }
 
+  /** Verifies that filtering a linked list retains organic items in their original order. */
   @Test
   public void linkedListTraversalRemainsLinearAndPreservesOrder() {
     Object first = new FakeFeedUnit(false);
@@ -81,6 +86,7 @@ public class FeedAdFilterTest {
     assertSame(post, out.get(0));
   }
 
+  /** Verifies that the resolved member set preserves an organic feed unit. */
   @Test
   public void resolvedFourArgumentOverloadDelegatesToLegacyThreadItemsLookup() {
     Object post = new FakeFeedUnit(false);
@@ -89,6 +95,7 @@ public class FeedAdFilterTest {
     assertSame(post, result.get(0));
   }
 
+  /** Verifies that the supplied thread accessor chain distinguishes ads from organic items. */
   @Test
   public void patchTimeResolvedThreadItemsAccessorIsUsed() {
     FakeThreadUnit adUnit = new FakeThreadUnit(new FakeThread(new FakeThreadItem(true)));
@@ -156,6 +163,7 @@ public class FeedAdFilterTest {
     assertEquals(1, filter445(Arrays.asList(ad445, post445)).size());
   }
 
+  /** Verifies that supplied 449 member names filter both media and thread ads. */
   @Test
   public void version449AccessorsAreProvidedDynamically() {
     Object ad = new FakeFeedUnit449(true);
@@ -178,15 +186,18 @@ public class FeedAdFilterTest {
     assertEquals(1, out.size());
   }
 
+  /** Verifies that a traversal failure returns the original feed without propagating the error. */
   @Test
   public void iteratorFailureReturnsOriginalList() {
     List<Object> broken =
         new java.util.AbstractList<Object>() {
+          /** Throws on element access to simulate a failure during iteration. */
           @Override
           public Object get(int index) {
             throw new IllegalStateException("synthetic iterator failure");
           }
 
+          /** Reports one element so traversal attempts the failing getter. */
           @Override
           public int size() {
             return 1;

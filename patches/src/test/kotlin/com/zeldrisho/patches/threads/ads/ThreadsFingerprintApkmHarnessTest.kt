@@ -21,6 +21,7 @@ import kotlin.test.assertTrue
 class ThreadsFingerprintApkmHarnessTest {
     @get:Rule val temp = TemporaryFolder()
 
+    /** Creates an isolated Threads patch context for the supplied version and version code. */
     private fun context(version: String, code: String): BytecodePatchContext {
         val config = PatcherConfig(apkFile = temp.newFile("input-$version.apk"), temporaryFilesPath = temp.newFolder())
         val metadata = PackageMetadata::class.java.constructors.single().newInstance(
@@ -34,6 +35,7 @@ class ThreadsFingerprintApkmHarnessTest {
             .newInstance(config, metadata)
     }
 
+    /** Loads classes from every DEX in every APK member of the supplied bundle. */
     private fun classes(apkm: File): List<ClassDef> {
         val result = mutableListOf<ClassDef>()
         ZipFile(apkm).use { bundle ->
@@ -50,6 +52,7 @@ class ThreadsFingerprintApkmHarnessTest {
         return result
     }
 
+    /** Collects fingerprint matches across classes, clearing cached matches before each class. */
     private fun scan(classes: List<ClassDef>, fingerprint: Fingerprint, patchContext: BytecodePatchContext) = buildList {
         with(patchContext) {
             classes.forEach { owner ->
@@ -59,6 +62,7 @@ class ThreadsFingerprintApkmHarnessTest {
         }
     }
 
+    /** Counts feed and link targets, resolving dependent fingerprints only from unique anchors. */
     private fun matchCounts(apkm: File, version: String, code: String): Map<String, Int> {
         val all = classes(apkm)
         val patchContext = context(version, code)
@@ -104,6 +108,12 @@ class ThreadsFingerprintApkmHarnessTest {
         }
     }
 
+    /**
+     * Checks selected target uniqueness and prints match counts for supplied Threads bundles.
+     *
+     * Reads THREADS_APKM_434/445/449 from the environment or system properties and skips
+     * when none points to an available APKM.
+     */
     @Test fun reportRealApkmFingerprintCounts() {
         val builds = listOf(
             Triple("434", "434.0.0.41.74", "510406926"),

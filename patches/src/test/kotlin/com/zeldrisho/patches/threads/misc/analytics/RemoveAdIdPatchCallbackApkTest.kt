@@ -14,6 +14,11 @@ import kotlin.test.assertFalse
 class RemoveAdIdPatchCallbackApkTest {
     @get:Rule val temporary = TemporaryFolder()
 
+    /**
+     * Runs the manifest callback and checks that both advertising-ID permissions are absent.
+     *
+     * Skips unless THREADS_TEST_APK supplies the pinned Threads APK.
+     */
     @Test
     fun adIdResourceCallbackRemovesOnlyTargetPermissionsFromPinnedApk() {
         val path = System.getenv("THREADS_TEST_APK")

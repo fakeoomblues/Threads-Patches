@@ -5,16 +5,19 @@ import java.util.List;
 
 /** Synthetic host shapes used by the feed-filter reflection tests. */
 final class FeedAdFilterFixtures {
+  /** Prevents instantiation of the fixture container. */
   private FeedAdFilterFixtures() {}
 
   /** Fake Instagram Media object with a DED() ad flag. */
   public static class FakeMedia {
     private final boolean ad;
 
+    /** Creates media with the requested ad status. */
     FakeMedia(boolean ad) {
       this.ad = ad;
     }
 
+    /** Returns the ad status exposed by the 434 predicate. */
     public boolean DED() {
       return ad;
     }
@@ -24,10 +27,12 @@ final class FeedAdFilterFixtures {
   public static class FakeFeedUnit {
     private final FakeMedia media;
 
+    /** Creates a feed unit whose media has the requested ad status. */
     FakeFeedUnit(boolean ad) {
       this.media = new FakeMedia(ad);
     }
 
+    /** Returns the media carried by this feed unit. */
     public FakeMedia A05() {
       return media;
     }
@@ -37,10 +42,12 @@ final class FeedAdFilterFixtures {
   public static class FakeThreadItem {
     private final FakeMedia media;
 
+    /** Creates a thread item whose media has the requested ad status. */
     FakeThreadItem(boolean ad) {
       this.media = new FakeMedia(ad);
     }
 
+    /** Returns the media carried by this 434 thread item. */
     public FakeMedia CDh() {
       return media;
     }
@@ -50,10 +57,12 @@ final class FeedAdFilterFixtures {
   public static class FakeThread {
     private final List<FakeThreadItem> items;
 
+    /** Creates a thread containing the supplied items. */
     FakeThread(FakeThreadItem... items) {
       this.items = Arrays.asList(items);
     }
 
+    /** Returns the items exposed by the 434 thread accessor. */
     public List<FakeThreadItem> Ckh() {
       return items;
     }
@@ -63,10 +72,12 @@ final class FeedAdFilterFixtures {
   public static class FakeThreadUnit {
     private final FakeThread thread;
 
+    /** Creates a feed unit carrying the supplied thread. */
     FakeThreadUnit(FakeThread thread) {
       this.thread = thread;
     }
 
+    /** Returns the thread carried by this feed unit. */
     public FakeThread A02() {
       return thread;
     }
@@ -74,6 +85,7 @@ final class FeedAdFilterFixtures {
 
   /** Fake ad header (X/1qQ on 434) that directly exposes DED() as true. */
   public static class FakeAdHeader {
+    /** Marks this synthetic 434 header as an advertisement. */
     public boolean DED() {
       return true;
     }
@@ -158,10 +170,12 @@ final class FeedAdFilterFixtures {
   public static class FakeMedia449 {
     private final boolean ad;
 
+    /** Creates 449 media with the requested ad status. */
     FakeMedia449(boolean ad) {
       this.ad = ad;
     }
 
+    /** Returns the ad status exposed by the 449 predicate. */
     public boolean DKT() {
       return ad;
     }
@@ -170,10 +184,12 @@ final class FeedAdFilterFixtures {
   public static class FakeFeedUnit449 {
     private final FakeMedia449 media;
 
+    /** Creates a 449 feed unit whose media has the requested ad status. */
     FakeFeedUnit449(boolean ad) {
       media = new FakeMedia449(ad);
     }
 
+    /** Returns the media carried by this feed unit. */
     public FakeMedia449 A05() {
       return media;
     }
@@ -182,10 +198,12 @@ final class FeedAdFilterFixtures {
   public static class FakeThreadItem449 {
     private final FakeMedia449 media;
 
+    /** Creates a 449 thread item whose media has the requested ad status. */
     FakeThreadItem449(boolean ad) {
       media = new FakeMedia449(ad);
     }
 
+    /** Returns the media carried by this 449 thread item. */
     public FakeMedia449 CLK() {
       return media;
     }
@@ -194,10 +212,12 @@ final class FeedAdFilterFixtures {
   public static class FakeThread449 {
     private final List<FakeThreadItem449> items;
 
+    /** Creates a 449 thread containing the supplied items. */
     FakeThread449(FakeThreadItem449... items) {
       this.items = Arrays.asList(items);
     }
 
+    /** Returns the items exposed by the 449 thread accessor. */
     public List<FakeThreadItem449> CrL() {
       return items;
     }
@@ -206,10 +226,12 @@ final class FeedAdFilterFixtures {
   public static class FakeThreadUnit449 {
     private final FakeThread449 thread;
 
+    /** Creates a feed unit carrying the supplied 449 thread. */
     FakeThreadUnit449(FakeThread449 thread) {
       this.thread = thread;
     }
 
+    /** Returns the thread carried by this feed unit. */
     public FakeThread449 A02() {
       return thread;
     }

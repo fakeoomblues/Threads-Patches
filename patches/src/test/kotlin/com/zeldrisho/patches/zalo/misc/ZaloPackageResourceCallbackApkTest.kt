@@ -15,6 +15,11 @@ import kotlin.test.assertEquals
 class ZaloPackageResourceCallbackApkTest {
     @get:Rule val temporary = TemporaryFolder()
 
+    /**
+     * Verifies that resource finalization writes the selected package name to the manifest.
+     *
+     * Requires ZALO_TEST_APK; skips when the pinned base APK is not supplied.
+     */
     @Test
     fun packageNameOptionIsAppliedByResourceFinalizer() {
         val path = System.getenv("ZALO_TEST_APK")

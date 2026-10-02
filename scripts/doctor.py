@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
+    """Report prerequisites for the selected mode, returning 1 when required tools are missing."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "mode", nargs="?", choices=("build", "analysis", "device"), default="build"
@@ -22,6 +23,7 @@ def main() -> int:
     missing = False
 
     def check(name: str, required: bool) -> None:
+        """Report tool availability and mark required tools missing for the selected mode."""
         nonlocal missing
         path = shutil.which(name)
         if path:

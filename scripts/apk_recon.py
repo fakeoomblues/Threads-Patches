@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 def main():
+    """Inspect an APK or bundle and write identity, DEX, and protection details to a report."""
     p = argparse.ArgumentParser()
     p.add_argument("apk")
     p.add_argument("output", nargs="?", default="recon.md")

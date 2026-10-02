@@ -10,6 +10,7 @@ import org.junit.Test;
 
 /** ABI contract used by the injected Threads invoke-static call. */
 public class ExtensionContractTest {
+  /** Verifies the public static filter signature used by injected feed bytecode. */
   @Test
   public void filterAdsHasExactInjectedAbi() throws Exception {
     Method method =
@@ -26,6 +27,7 @@ public class ExtensionContractTest {
     assertEquals(List.class, method.getReturnType());
   }
 
+  /** Verifies the context, URL, and boolean signature used by injected link bytecode. */
   @Test
   public void openLinksHasExactInjectedAbi() throws Exception {
     Method method =

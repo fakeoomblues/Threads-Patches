@@ -15,6 +15,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class BackupIntervalTransformationTest {
+    /** Builds a synthetic interval getter and wide result with a configurable preference key. */
     private fun scheduler(key: String = "SERVER_CONFIG_SYNC_MESSAGE_INTERVAL_") = syntheticMutableMethod(
         registerCount = 6,
         instructions = listOf(
@@ -34,6 +35,7 @@ class BackupIntervalTransformationTest {
         ),
     )
 
+    /** Verifies that a three-hour override writes milliseconds to the original result register. */
     @Test
     fun overridesOnlyIntervalResultWithSelectedMilliseconds() {
         val method = scheduler()
@@ -44,6 +46,7 @@ class BackupIntervalTransformationTest {
         assertEquals(10_800_000, (result as NarrowLiteralInstruction).narrowLiteral)
     }
 
+    /** Verifies the millisecond conversion for every supported backup interval. */
     @Test
     fun supportsEachAllowedIntervalInMilliseconds() {
         mapOf("1" to 3_600_000, "3" to 10_800_000, "6" to 21_600_000, "12" to 43_200_000).forEach { (hours, millis) ->
@@ -53,6 +56,7 @@ class BackupIntervalTransformationTest {
         }
     }
 
+    /** Verifies that unsupported hours and an unrelated preference key fail validation. */
     @Test
     fun rejectsUnsupportedIntervalAndMissingNativeKey() {
         assertFailsWith<IllegalArgumentException> { overrideBackupInterval(scheduler(), "2") }

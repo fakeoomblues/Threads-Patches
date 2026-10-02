@@ -15,6 +15,13 @@ private const val INTERVAL_KEY = "SERVER_CONFIG_SYNC_MESSAGE_INTERVAL_"
 private const val INTERVAL_GETTER = "Lu40/p0;->Y(JZLjava/lang/String;)J"
 private val intervalHours = setOf("1", "3", "6", "12")
 
+/**
+ * Replaces the native interval getter result with [hours] converted to milliseconds.
+ *
+ * Accepts only 1, 3, 6, or 12 hours. Requires a single known getter, the account-specific
+ * key before it, and a wide result immediately after it; validation fails before mutation.
+ * The remaining scheduler instructions, including native backup guards, are preserved.
+ */
 internal fun overrideBackupInterval(method: MutableMethod, hours: String) {
     require(hours in intervalHours) { "Backup interval must be one of 1, 3, 6, or 12 hours" }
     val instructions = method.implementation?.instructions?.toList()

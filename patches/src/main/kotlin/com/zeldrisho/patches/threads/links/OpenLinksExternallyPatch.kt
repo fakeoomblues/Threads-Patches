@@ -17,6 +17,13 @@ val openLinksExternallyPatch = bytecodePatch(
     }
 }
 
+/**
+ * Prepends an external-link launch attempt to the resolved Threads web-link handler.
+ *
+ * The target must expose context at p1 and URL at p4, return an object, and provide
+ * v0/v1 as scratch registers. A successful launch returns Kotlin Unit; a failed
+ * launch falls through to the original handler.
+ */
 internal fun injectOpenLinksExternally(method: app.morphe.patcher.util.proxy.mutableTypes.MutableMethod) {
     method.addInstructionsWithLabels(
         0,

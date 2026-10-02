@@ -122,6 +122,7 @@ class ZaloMediaFingerprintsTest {
         }
     }
 
+    /** Builds a media-age candidate with a configurable preference literal and return shape. */
     private fun ageFingerprintMethod(
         owner: String,
         name: String,
@@ -161,6 +162,7 @@ class ZaloMediaFingerprintsTest {
         ),
     )
 
+    /** Verifies backup and restore age targets reject candidates with unrelated preference keys. */
     @Test
     @Suppress("LongMethod")
     fun ageFingerprintsMatchExactPreferenceKeys() {
@@ -228,6 +230,7 @@ class ZaloMediaFingerprintsTest {
         }
     }
 
+    /** Wraps a mutated method in its declaring class for isolated fingerprint matching. */
     private fun classWithMethod(method: ImmutableMethod) = ImmutableClassDef(
         method.definingClass,
         AccessFlags.PUBLIC.value,
@@ -239,6 +242,11 @@ class ZaloMediaFingerprintsTest {
         listOf(method),
     )
 
+    /**
+     * Checks that each media target rejects an instruction or method-name mutation.
+     *
+     * Uses the pinned ZALO_TEST_APK as the positive fixture and skips when it is unset.
+     */
     @Test
     fun everyMediaFingerprintRejectsOneConstraintMutation() {
         val path = System.getenv("ZALO_TEST_APK")

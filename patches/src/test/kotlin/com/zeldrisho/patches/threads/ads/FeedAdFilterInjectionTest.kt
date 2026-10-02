@@ -56,6 +56,7 @@ class FeedAdFilterInjectionTest {
         instructions = null,
     )
 
+    /** Returns the injected opcode sequence after checking that the original NOP body is preserved. */
     private fun injectedOpcodes(registerCount: Int): List<Opcode> {
         val method = targetMethod(registerCount)
         injectFeedAdFilter(method)
@@ -65,6 +66,7 @@ class FeedAdFilterInjectionTest {
         return instructions.map { it.opcode }
     }
 
+    /** Verifies that missing or ambiguous feed matches fail with a diagnostic count. */
     @Test fun feedFingerprintResultsMustBeUnique() {
         assertEquals("target", requireSingleFeedMatch("target", listOf("target")))
         val missing = kotlin.test.assertFailsWith<IllegalStateException> {
@@ -77,6 +79,7 @@ class FeedAdFilterInjectionTest {
         assertEquals("Threads target fingerprint matched 2 methods; expected exactly one", ambiguous.message)
     }
 
+    /** Verifies plain object moves and register operands when the feed list fits in four bits. */
     @Test fun lowRegisterHookUsesPlainMoves() {
         // registerCount 15 -> listReg 11; v0-v5 are local scratch registers.
         val opcodes = injectedOpcodes(15)
@@ -106,6 +109,7 @@ class FeedAdFilterInjectionTest {
         assertEquals(0, store.registerB)
     }
 
+    /** Verifies from16 object moves for the pinned feed-merge register frame. */
     @Test fun pinnedFrameHookUsesFrom16Moves() {
         // Pinned A0F frame: registerCount 46 -> listReg 42.
         val opcodes = injectedOpcodes(46)
@@ -126,6 +130,7 @@ class FeedAdFilterInjectionTest {
         )
     }
 
+    /** Verifies a move-object/16 store when the feed-list register exceeds eight bits. */
     @Test fun hugeFrameStoreUsesMove16() {
         // registerCount 260 -> listReg 256: from16 cannot address the store destination.
         val opcodes = injectedOpcodes(260)
@@ -141,6 +146,7 @@ class FeedAdFilterInjectionTest {
         kotlin.test.assertEquals("BarcelonaFeedCache merge method has no implementation", error.message)
     }
 
+    /** Verifies the filter ABI, six-register range invoke, and capture of the returned list. */
     @Test fun hookCallsFilterAdsAndPreservesList() {
         val method = targetMethod(46)
         injectFeedAdFilter(method)

@@ -18,6 +18,7 @@ import kotlin.test.assertTrue
 class ZaloAdsApkQualificationTest {
     @get:Rule val temporary = TemporaryFolder()
 
+    /** Creates an isolated Zalo patch context for class-scoped fingerprint matching. */
     private fun context(): BytecodePatchContext {
         val config = PatcherConfig(apkFile = temporary.newFile("input.apk"), temporaryFilesPath = temporary.newFolder())
         val metadata = PackageMetadata::class.java.constructors.single().newInstance(

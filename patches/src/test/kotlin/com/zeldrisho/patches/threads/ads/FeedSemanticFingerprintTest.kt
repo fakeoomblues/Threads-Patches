@@ -29,6 +29,7 @@ import kotlin.test.assertTrue
 class FeedSemanticFingerprintTest {
     @get:Rule val temporary = TemporaryFolder()
 
+    /** Creates an isolated Threads patch context for class-scoped fingerprint matching. */
     private fun context(): BytecodePatchContext {
         val config = PatcherConfig(apkFile = temporary.newFile("input.apk"), temporaryFilesPath = temporary.newFolder())
         val metadata = PackageMetadata::class.java.constructors.single().newInstance(
@@ -41,6 +42,7 @@ class FeedSemanticFingerprintTest {
             .getConstructor(PatcherConfig::class.java, PackageMetadata::class.java).newInstance(config, metadata)
     }
 
+    /** Builds a public synthetic method with optional instructions and configurable parameter types. */
     private fun method(
         owner: String,
         name: String,
@@ -58,6 +60,7 @@ class FeedSemanticFingerprintTest {
         code?.let { ImmutableMethodImplementation(4, it, emptyList(), emptyList()) },
     )
 
+    /** Wraps the supplied methods in a public synthetic class for fingerprint matching. */
     private fun owner(type: String, vararg methods: Method) = ImmutableClassDef(
         type,
         AccessFlags.PUBLIC.value,
@@ -69,6 +72,7 @@ class FeedSemanticFingerprintTest {
         methods.toList(),
     )
 
+    /** Verifies that feed-content and item-media accessors resolve despite renamed methods. */
     @Test fun feedContentAndThreadItemMediaAccessorsResolveByStableShape() {
         val feedOwner = "LFeedWrapper;"
         val content = method(
@@ -95,6 +99,7 @@ class FeedSemanticFingerprintTest {
         }
     }
 
+    /** Verifies that the ad helper is selected by its pair of GraphQL literals. */
     @Test fun selectsMediaHelperByBothGraphQlLiterals() {
         val good = method(
             "LHelper;",
@@ -112,6 +117,7 @@ class FeedSemanticFingerprintTest {
         }
     }
 
+    /** Verifies that a renamed media predicate matches the helper construction and return sequence. */
     @Test fun mediaPredicateMustConstructAndReturnTheResolvedHelper() {
         val helper = ImmutableMethodReference("LHelper;", "test", listOf("LObject;"), "Z")
         val code = listOf(
@@ -126,6 +132,7 @@ class FeedSemanticFingerprintTest {
         }
     }
 
+    /** Verifies that empty implementations fail the required feed semantic fingerprints. */
     @Test fun semanticFingerprintsRejectMissingSignals() {
         val feedClass = "LFeed;"
         val anchor = ImmutableMethodReference(feedClass, "anchor", emptyList(), "V")
@@ -148,6 +155,7 @@ class FeedSemanticFingerprintTest {
         }
     }
 
+    /** Verifies thread and media accessor matches using their anchor calls and type operations. */
     @Test fun threadAndWrapperAccessorsRequireTheirSemanticShape() {
         val feedClass = "LFeed;"
         val anchor = ImmutableMethodReference(feedClass, "anchor", emptyList(), "V")

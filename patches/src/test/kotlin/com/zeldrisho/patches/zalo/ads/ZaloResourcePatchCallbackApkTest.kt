@@ -14,6 +14,11 @@ import kotlin.test.assertFalse
 class ZaloResourcePatchCallbackApkTest {
     @get:Rule val temporary = TemporaryFolder()
 
+    /**
+     * Runs the manifest callback and checks that both advertising-ID permissions are absent.
+     *
+     * Skips unless ZALO_TEST_APK supplies the pinned Zalo APK.
+     */
     @Test
     fun adIdResourceCallbackRemovesOnlyTargetPermissionsFromPinnedApk() {
         val path = System.getenv("ZALO_TEST_APK")

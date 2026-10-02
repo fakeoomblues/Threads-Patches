@@ -17,6 +17,7 @@ SPEC.loader.exec_module(extract_smali)
 
 class ExtractSmaliTest(unittest.TestCase):
     def test_default_output_uses_app_and_version(self):
+        """Check that known APKMirror package names map to app/version analysis paths."""
         threads = extract_smali.default_output(
             Path("com.instagram.barcelona_445.0.0.46.83-1.apkm")
         )
@@ -26,6 +27,7 @@ class ExtractSmaliTest(unittest.TestCase):
         self.assertEqual(root / "zalo/26.08.01/smali", zalo)
 
     def test_bundle_rejects_traversal_without_replacing_existing_output(self):
+        """Reject traversal entries before extraction and preserve the existing smali output."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             bundle = root / "input.apkm"
@@ -44,6 +46,7 @@ class ExtractSmaliTest(unittest.TestCase):
             self.assertFalse((root / "escape.apk").exists())
 
     def test_malformed_container_preserves_existing_output(self):
+        """Preserve existing smali when the input container is not a ZIP archive."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             bundle = root / "malformed.apks"
@@ -60,6 +63,7 @@ class ExtractSmaliTest(unittest.TestCase):
             self.assertEqual("existing", (out / "keep.smali").read_text())
 
     def test_archive_rejects_symlink_members(self):
+        """Reject symbolic-link entries even when their names end in .apk."""
         with tempfile.TemporaryDirectory() as temp:
             bundle = Path(temp) / "symlink.apkm"
             info = zipfile.ZipInfo("base.apk")
@@ -74,6 +78,7 @@ class ExtractSmaliTest(unittest.TestCase):
                     extract_smali.validated_members(archive, ".apk")
 
     def test_total_expanded_archive_limit_is_enforced(self):
+        """Reject archives whose combined expanded member sizes exceed the limit."""
         with tempfile.TemporaryDirectory() as temp:
             bundle = Path(temp) / "expanded.apkm"
             with zipfile.ZipFile(bundle, "w") as archive:
@@ -87,6 +92,7 @@ class ExtractSmaliTest(unittest.TestCase):
                 extract_smali.validated_members(archive, ".apk")
 
     def test_archive_limits_are_enforced_before_extraction(self):
+        """Reject an oversized APK member before extracting its contents."""
         with tempfile.TemporaryDirectory() as temp:
             bundle = Path(temp) / "large.apkm"
             with zipfile.ZipFile(bundle, "w") as archive:
@@ -99,6 +105,7 @@ class ExtractSmaliTest(unittest.TestCase):
                 extract_smali.validated_members(archive, ".apk")
 
     def test_bundle_processes_multiple_splits(self):
+        """Check that DEX files from base and nested feature APKs both reach disassembly."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             bundle = root / "input.apks"
@@ -113,6 +120,7 @@ class ExtractSmaliTest(unittest.TestCase):
                 archive.writestr("splits/feature.apk", feature.getvalue())
 
             def fake_baksmali(command, check):
+                """Write the input DEX bytes as fake smali to identify each processed split."""
                 current = Path(command[2]).read_bytes()
                 target = Path(command[command.index("-o") + 1])
                 target.mkdir(parents=True)
@@ -132,6 +140,7 @@ class ExtractSmaliTest(unittest.TestCase):
             )
 
     def test_default_output_replaces_stale_directory(self):
+        """Replace stale smali output only after fresh disassembly completes."""
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             bundle = root / "com.instagram.barcelona_445.0.0.46.83-1.apkm"
@@ -145,6 +154,7 @@ class ExtractSmaliTest(unittest.TestCase):
                 apkm.writestr("base.apk", split.getvalue())
 
             def fake_baksmali(command, check):
+                """Write a fresh smali fixture without invoking the external disassembler."""
                 target = Path(command[command.index("-o") + 1])
                 target.mkdir(parents=True)
                 (target / "Class.smali").write_text("fresh")

@@ -86,6 +86,11 @@ def default_output(apk: Path) -> Path:
 
 
 def main():
+    """Disassemble APK or bundle DEX files and replace the output after successful staging.
+
+    An omitted output path is inferred from the bundle name. Invalid archives or
+    failed baksmali commands leave the existing output in place.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("apk", help="APK, APKM, XAPK, or APKS input")
     parser.add_argument(

@@ -12,6 +12,11 @@ from pathlib import Path
 
 
 def main() -> int:
+    """Update the bundle description from its versioned changelog section.
+
+    Return 0 on success, 2 for invalid arguments, or a nonzero validation/extractor
+    status. Extraction must succeed before the manifest is written.
+    """
     if len(sys.argv) != 4:
         print(
             "Usage: sync_bundle_description.py CHANGELOG.md patches-bundle.json <owner/repo>",

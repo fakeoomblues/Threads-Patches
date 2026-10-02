@@ -23,6 +23,7 @@ import kotlin.test.assertNull
 class TelemetryFingerprintTest {
     @get:Rule val temporary = TemporaryFolder()
 
+    /** Creates an isolated Zalo patch context for class-scoped fingerprint matching. */
     private fun context(): BytecodePatchContext {
         val config = PatcherConfig(apkFile = temporary.newFile(), temporaryFilesPath = temporary.newFolder())
         val metadata = PackageMetadata::class.java.constructors.single().newInstance(
@@ -63,6 +64,7 @@ class TelemetryFingerprintTest {
         )
     }
 
+    /** Builds a telemetry DAO candidate with the target signature and a configurable sink call. */
     private fun daoClass(target: DaoTarget, sink: String): ImmutableClassDef {
         val parameters = target.parameters.map { ImmutableMethodParameter(it, emptySet(), null) }
         val method = ImmutableMethod(
@@ -103,6 +105,7 @@ class TelemetryFingerprintTest {
         )
     }
 
+    /** Verifies each telemetry DAO matches its expected sink and rejects a substituted sink. */
     @Test
     fun analyticsDaoFingerprintsMatchTheirExpectedSinkAndRejectOneConstraintNearMiss() {
         with(context()) {
@@ -120,6 +123,7 @@ class TelemetryFingerprintTest {
         }
     }
 
+    /** Runs the telemetry callback against ZALO_TEST_APK, skipping when the input is unset. */
     @Test
     fun telemetryPatchCallbackRunsAgainstPinnedZaloDex() {
         val path = System.getenv("ZALO_TEST_APK")

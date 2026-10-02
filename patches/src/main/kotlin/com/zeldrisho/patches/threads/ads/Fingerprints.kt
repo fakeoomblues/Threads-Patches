@@ -156,6 +156,12 @@ internal fun threadItemMediaAccessor() = Fingerprint(
     },
 )
 
+/**
+ * Matches a no-argument wrapper accessor in [anchor]'s class with the requested [returnType].
+ *
+ * The method must call the anchor and contain a thread cast/field read or a media
+ * instance check/interface call, depending on the requested role.
+ */
 internal fun feedWrapperAccessor(anchor: MethodReference, returnType: String) = Fingerprint(
     definingClass = anchor.definingClass,
     returnType = returnType,

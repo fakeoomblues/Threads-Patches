@@ -12,6 +12,7 @@ SCRIPT = Path(__file__).resolve().parents[1] / "sync_bundle_description.py"
 
 class SyncBundleDescriptionTest(unittest.TestCase):
     def test_updates_current_description_and_preserves_other_manifest_fields(self):
+        """Copy the current release notes into the description while preserving manifest metadata."""
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             changelog = root / "CHANGELOG.md"
@@ -52,6 +53,7 @@ class SyncBundleDescriptionTest(unittest.TestCase):
                 self.assertEqual(updated[key], original[key])
 
     def test_missing_release_fails_without_changing_manifest(self):
+        """Keep the manifest intact when its version has no matching changelog release."""
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             changelog = root / "CHANGELOG.md"

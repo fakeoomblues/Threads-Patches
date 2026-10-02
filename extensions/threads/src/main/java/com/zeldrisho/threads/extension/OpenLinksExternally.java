@@ -7,6 +7,7 @@ import android.net.Uri;
 
 /** Opens valid web URLs through Android's normal external activity resolution. */
 public final class OpenLinksExternally {
+  /** Prevents instantiation of this static link handler. */
   private OpenLinksExternally() {}
 
   /** Returns true only when an external activity was successfully launched. */
